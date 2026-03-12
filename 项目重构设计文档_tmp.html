@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>项目重构设计文档.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="autoprdtestexpert--%E7%9C%9F%E6%AD%A3%E7%9A%84agent%E9%87%8D%E6%9E%84%E8%AE%BE%E8%AE%A1%E6%96%87%E6%A1%A3">Auto_prd_test_expert — 真正的Agent重构设计文档</h1>
+<blockquote>
+<p><strong>文档类型</strong>: 技术设计规范（TDD）
+<strong>适用阶段</strong>: 编码前必读，指导所有后续实现
+<strong>核心原则</strong>: UI层零改动，core层完全重构，功能100%向后兼容</p>
+</blockquote>
+<hr>
+<h2 id="%E7%9B%AE%E5%BD%95">目录</h2>
+<ul>
+<li><a href="#%E4%B8%80%E9%87%8D%E6%9E%84%E6%80%BB%E8%A7%88">一、重构总览</a></li>
+<li><a href="#%E4%BA%8C%E6%96%B0%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84">二、新文件结构</a></li>
+<li><a href="#%E4%B8%89%E6%96%B0%E4%BE%9D%E8%B5%96%E6%B8%85%E5%8D%95">三、新依赖清单</a></li>
+<li><a href="#%E5%9B%9Brag%E5%B1%82%E5%8D%87%E7%BA%A7%E8%AE%BE%E8%AE%A1">四、RAG层升级设计</a></li>
+<li><a href="#%E4%BA%94llm-client%E5%8D%87%E7%BA%A7%E8%AE%BE%E8%AE%A1">五、LLM Client升级设计</a></li>
+<li><a href="#%E5%85%AD%E5%B7%A5%E5%85%B7%E5%BA%93%E8%AE%BE%E8%AE%A1">六、工具库设计</a></li>
+<li><a href="#%E4%B8%83react-agent%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1">七、ReAct Agent核心设计</a></li>
+<li><a href="#%E5%85%AB%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1">八、记忆系统设计</a></li>
+<li><a href="#%E4%B9%9Dlanggraph%E5%A4%9Aagent%E7%BC%96%E6%8E%92%E8%AE%BE%E8%AE%A1">九、LangGraph多Agent编排设计</a></li>
+<li><a href="#%E5%8D%81%E6%8E%A5%E5%8F%A3%E8%BF%81%E7%A7%BB%E5%AF%B9%E7%85%A7%E8%A1%A8">十、接口迁移对照表</a></li>
+<li><a href="#%E5%8D%81%E4%B8%80ui%E9%80%82%E9%85%8D%E8%AF%B4%E6%98%8E">十一、UI适配说明</a></li>
+<li><a href="#%E5%8D%81%E4%BA%8C%E5%88%86%E9%98%B6%E6%AE%B5%E5%AE%9E%E6%96%BD%E8%AE%A1%E5%88%92">十二、分阶段实施计划</a></li>
+</ul>
+<hr>
+<h2 id="%E4%B8%80%E9%87%8D%E6%9E%84%E6%80%BB%E8%A7%88">一、重构总览</h2>
+<h3 id="11-%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98">1.1 核心问题</h3>
+<p>当前项目的本质：</p>
+<pre class="hljs"><code><div>当前项目 = LLM + 固定Prompt + ChromaDB检索
+</div></code></pre>
+<p>缺失的Agent能力：</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>当前状态</th>
+<th>重构后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自主推理循环</td>
+<td>❌ 单次调用</td>
+<td>✅ ReAct Loop</td>
+</tr>
+<tr>
+<td>工具调用</td>
+<td>❌ 无</td>
+<td>✅ 5个结构化工具</td>
+</tr>
+<tr>
+<td>短期记忆</td>
+<td>⚠️ Session State</td>
+<td>✅ ConversationMemory</td>
+</tr>
+<tr>
+<td>长期记忆</td>
+<td>❌ 无</td>
+<td>✅ ChromaDB持久化</td>
+</tr>
+<tr>
+<td>任务规划</td>
+<td>❌ 无</td>
+<td>✅ Planner Agent</td>
+</tr>
+<tr>
+<td>自我反思</td>
+<td>❌ 无</td>
+<td>✅ Reflection机制</td>
+</tr>
+<tr>
+<td>多Agent协同</td>
+<td>⚠️ 手动触发</td>
+<td>✅ LangGraph自动编排</td>
+</tr>
+<tr>
+<td>混合检索</td>
+<td>❌ 仅向量</td>
+<td>✅ 向量 + BM25 + Re-rank</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-%E6%96%B0%E6%97%A7%E6%9E%B6%E6%9E%84%E5%AF%B9%E6%AF%94">1.2 新旧架构对比</h3>
+<h4 id="%E6%97%A7%E6%9E%B6%E6%9E%84%E5%BD%93%E5%89%8D">旧架构（当前）</h4>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────┐
+│              Streamlit UI               │
+│  (main.py编排所有业务逻辑)               │
+└──────┬──────────────────────┬───────────┘
+       │                      │
+       ▼                      ▼
+┌─────────────┐       ┌──────────────┐
+│  RAGEngine  │       │  LLMClient   │
+│  (ChromaDB  │       │  (直接调用   │
+│   原始API)  │       │  Gemini SDK) │
+└─────────────┘       └──────────────┘
+       │                      │
+       ▼                      ▼
+┌─────────────┐       ┌──────────────┐
+│  ChromaDB   │       │  Gemini API  │
+└─────────────┘       └──────────────┘
+
+问题: 所有智能逻辑在Prompt里，AI是&quot;被动执行者&quot;
+</div></code></pre>
+<h4 id="%E6%96%B0%E6%9E%B6%E6%9E%84%E9%87%8D%E6%9E%84%E5%90%8E">新架构（重构后）</h4>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────────┐
+│              Streamlit UI (不变)             │
+└────────────────────┬────────────────────────┘
+                     │  只改这里的调用方式
+                     ▼
+┌─────────────────────────────────────────────┐
+│         AgentOrchestrator (新增)            │
+│  (接收UI请求 → 路由到对应Agent流程)          │
+└──────┬──────────────────────────────────────┘
+       │
+       ▼  LangGraph编排
+┌─────────────────────────────────────────────┐
+│             Multi-Agent Graph               │
+│                                             │
+│  PlannerAgent → GeneratorAgent → CriticAgent│
+│       ↑              │              │       │
+│       └──────────────┘←─RefinerAgent┘       │
+└──────┬──────────────────────────────────────┘
+       │
+       ▼  工具调用
+┌─────────────────────────────────────────────┐
+│                Tool Library                 │
+│  SearchSpecsTool  │  SearchHistoryTool      │
+│  BoundaryCalcTool │  GenerateCasesTool      │
+│                   │  EvaluateCasesTool      │
+└──────┬────────────────────────────┬─────────┘
+       │                            │
+       ▼                            ▼
+┌─────────────┐             ┌──────────────┐
+│ LangChain   │             │   LCEL链     │
+│  Chroma     │             │  (Gemini via │
+│  混合检索   │             │  LangChain)  │
+└─────────────┘             └──────────────┘
+
+优势: AI主动规划、主动调用工具、自动迭代优化
+</div></code></pre>
+<hr>
+<h2 id="%E4%BA%8C%E6%96%B0%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84">二、新文件结构</h2>
+<h3 id="21-%E7%9B%AE%E5%BD%95%E5%AF%B9%E6%AF%94">2.1 目录对比</h3>
+<pre class="hljs"><code><div># 旧结构                          # 新结构（变化部分）
+core/                            core/
+├── __init__.py          保留→   ├── __init__.py
+├── rag_engine.py        升级→   ├── rag_engine.py      ← LangChain重构
+├── llm_client.py        升级→   ├── llm_client.py      ← LCEL重构
+├── evaluator.py         升级→   ├── evaluator.py       ← 改为CriticAgent包装
+│                        新增→   ├── lc_chain.py        ← LCEL链集合
+│                        新增→   └── agent/             ← 新增目录
+│                                    ├── __init__.py
+│                                    ├── tools.py        ← 5个工具定义
+│                                    ├── memory.py       ← 三层记忆系统
+│                                    ├── react_agent.py  ← ReAct推理循环
+│                                    └── graph.py        ← LangGraph编排
+
+config/                          config/
+├── __init__.py          保留→   ├── __init__.py
+├── settings.py          保留→   ├── settings.py
+└── prompts.py           扩展→   └── prompts.py         ← 新增ReAct专用Prompt
+
+ui/                              ui/
+├── __init__.py          保留→   ├── __init__.py
+├── main.py              微调→   ├── main.py            ← 仅改调用接口
+├── sidebar.py           保留→   ├── sidebar.py
+└── components.py        保留→   └── components.py
+
+requirements.txt         升级→   requirements.txt       ← 新增LangChain依赖
+</div></code></pre>
+<h3 id="22-%E5%90%84%E6%96%B0%E5%A2%9E%E6%96%87%E4%BB%B6%E8%81%8C%E8%B4%A3%E8%AF%B4%E6%98%8E">2.2 各新增文件职责说明</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>职责</th>
+<th>对应旧功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>core/lc_chain.py</code></td>
+<td>封装所有LCEL链，统一对外接口</td>
+<td><code>core/llm_client.py</code>的函数</td>
+</tr>
+<tr>
+<td><code>core/agent/tools.py</code></td>
+<td>定义所有可被Agent调用的工具</td>
+<td>无（新增能力）</td>
+</tr>
+<tr>
+<td><code>core/agent/memory.py</code></td>
+<td>三层记忆系统实现</td>
+<td><code>st.session_state['gemini_history']</code></td>
+</tr>
+<tr>
+<td><code>core/agent/react_agent.py</code></td>
+<td>ReAct推理循环主体</td>
+<td>无（新增能力）</td>
+</tr>
+<tr>
+<td><code>core/agent/graph.py</code></td>
+<td>LangGraph多Agent状态图</td>
+<td>无（新增能力）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E4%B8%89%E6%96%B0%E4%BE%9D%E8%B5%96%E6%B8%85%E5%8D%95">三、新依赖清单</h2>
+<h3 id="31-%E6%96%B0%E5%A2%9E%E4%BE%9D%E8%B5%96">3.1 新增依赖</h3>
+<pre class="hljs"><code><div># requirements.txt 完整版（新）
+
+# ======== 现有依赖（保留）========
+chromadb==1.3.5
+google-generativeai==0.8.5
+pandas==2.3.3
+pillow==12.0.0
+PyYAML==6.0.3
+streamlit==1.51.0
+watchdog==6.0.0
+
+# ======== LangChain核心（新增）========
+langchain==0.3.0
+langchain-core==0.3.0
+langchain-community==0.3.0
+
+# ======== LangChain集成（新增）========
+langchain-google-genai==2.0.0       # ChatGoogleGenerativeAI
+langchain-chroma==0.2.0             # LangChain的Chroma封装
+langchain-text-splitters==0.3.0    # RecursiveCharacterTextSplitter
+
+# ======== Agent编排（新增）========
+langgraph==0.2.0                    # 多Agent状态图编排
+
+# ======== 混合检索（新增）========
+rank-bm25==0.2.2                    # BM25关键词检索
+
+# ======== Re-ranking（新增）========
+sentence-transformers==3.3.1        # BGE Reranker
+</div></code></pre>
+<h3 id="32-%E5%AE%89%E8%A3%85%E5%91%BD%E4%BB%A4">3.2 安装命令</h3>
+<pre class="hljs"><code><div>pip install langchain langchain-core langchain-community \
+            langchain-google-genai langchain-chroma \
+            langchain-text-splitters langgraph \
+            rank-bm25 sentence-transformers \
+            -i https://pypi.tuna.tsinghua.edu.cn/simple
+</div></code></pre>
+<h3 id="33-%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E6%80%A7%E8%AF%B4%E6%98%8E">3.3 版本兼容性说明</h3>
+<table>
+<thead>
+<tr>
+<th>依赖</th>
+<th>选择原因</th>
+<th>注意事项</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>langchain 0.3.x</td>
+<td>稳定版，LCEL成熟</td>
+<td>v0.1/v0.2 API不同，务必用0.3</td>
+</tr>
+<tr>
+<td>langgraph 0.2.x</td>
+<td>与langchain 0.3配套</td>
+<td>不能用0.1版本</td>
+</tr>
+<tr>
+<td>langchain-chroma 0.2.x</td>
+<td>对应chromadb 1.3.x</td>
+<td>注意版本绑定</td>
+</tr>
+<tr>
+<td>sentence-transformers 3.3.x</td>
+<td>支持BGE模型</td>
+<td>首次运行会下载模型（约1.5GB）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E5%9B%9Brag%E5%B1%82%E5%8D%87%E7%BA%A7%E8%AE%BE%E8%AE%A1">四、RAG层升级设计</h2>
+<h3 id="41-%E5%8D%87%E7%BA%A7%E7%9B%AE%E6%A0%87">4.1 升级目标</h3>
+<table>
+<thead>
+<tr>
+<th>当前</th>
+<th>升级后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>自研80行TextSplitter</td>
+<td>LangChain <code>RecursiveCharacterTextSplitter</code></td>
+</tr>
+<tr>
+<td>仅向量检索</td>
+<td>向量(70%) + BM25(30%) 混合检索</td>
+</tr>
+<tr>
+<td>无重排序</td>
+<td>BGE-Reranker二次精排</td>
+</tr>
+<tr>
+<td>Embedding硬编码Gemini</td>
+<td>可切换（Gemini/本地BGE-M3）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-%E6%96%B0ragengine%E7%B1%BB%E8%AE%BE%E8%AE%A1">4.2 新RAGEngine类设计</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># core/rag_engine.py 重构后的类结构（伪代码/接口定义）</span>
+
+<span class="hljs-keyword">from</span> langchain_text_splitters <span class="hljs-keyword">import</span> RecursiveCharacterTextSplitter
+<span class="hljs-keyword">from</span> langchain_chroma <span class="hljs-keyword">import</span> Chroma
+<span class="hljs-keyword">from</span> langchain_google_genai <span class="hljs-keyword">import</span> GoogleGenerativeAIEmbeddings
+<span class="hljs-keyword">from</span> rank_bm25 <span class="hljs-keyword">import</span> BM25Okapi
+<span class="hljs-keyword">from</span> sentence_transformers <span class="hljs-keyword">import</span> CrossEncoder
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RAGEngine</span>:</span>
+    <span class="hljs-string">"""
+    升级后的RAG引擎
+
+    变化:
+    - TextSplitter → langchain RecursiveCharacterTextSplitter
+    - 纯向量检索 → 混合检索(向量+BM25) + Re-ranking
+    - 对外接口保持不变(向后兼容)
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, api_key: str, embedding_backend: str = <span class="hljs-string">"gemini"</span>)</span>:</span>
+        <span class="hljs-comment"># 1. Embedding初始化（支持切换）</span>
+        <span class="hljs-keyword">if</span> embedding_backend == <span class="hljs-string">"gemini"</span>:
+            self.embeddings = GoogleGenerativeAIEmbeddings(
+                model=<span class="hljs-string">"models/text-embedding-004"</span>,
+                google_api_key=api_key
+            )
+        <span class="hljs-comment"># 预留: elif embedding_backend == "bge": ...</span>
+
+        <span class="hljs-comment"># 2. LangChain Chroma封装（替换原来的chromadb原始API）</span>
+        self.knowledge_store = Chroma(
+            collection_name=<span class="hljs-string">"company_knowledge"</span>,
+            embedding_function=self.embeddings,
+            persist_directory=DB_PATH
+        )
+        self.history_store = Chroma(
+            collection_name=<span class="hljs-string">"history_cases"</span>,
+            embedding_function=self.embeddings,
+            persist_directory=DB_PATH
+        )
+
+        <span class="hljs-comment"># 3. 文本切片器（替换自研TextSplitter）</span>
+        self.splitter = RecursiveCharacterTextSplitter(
+            chunk_size=<span class="hljs-number">500</span>,
+            chunk_overlap=<span class="hljs-number">100</span>,
+            separators=[<span class="hljs-string">"\n\n"</span>, <span class="hljs-string">"\n"</span>, <span class="hljs-string">"。"</span>, <span class="hljs-string">"！"</span>, <span class="hljs-string">"？"</span>, <span class="hljs-string">"."</span>, <span class="hljs-string">" "</span>, <span class="hljs-string">""</span>]
+        )
+
+        <span class="hljs-comment"># 4. BM25索引（新增：用于混合检索）</span>
+        self._bm25_index = <span class="hljs-literal">None</span>
+        self._bm25_docs = []
+        self._build_bm25_index()
+
+        <span class="hljs-comment"># 5. Re-ranking模型（新增）</span>
+        <span class="hljs-comment"># 注意: 首次运行会自动从HuggingFace下载模型</span>
+        self.reranker = CrossEncoder(<span class="hljs-string">'BAAI/bge-reranker-base'</span>)
+
+    <span class="hljs-comment"># ---- 对外接口（与旧版完全相同，向后兼容）----</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">add_knowledge</span><span class="hljs-params">(self, file_obj, summary=<span class="hljs-string">""</span>, content_text=None, model_name=None)</span>:</span>
+        <span class="hljs-string">"""存入知识库 - 接口不变，内部改用LangChain TextSplitter"""</span>
+        ...
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">add_history_case</span><span class="hljs-params">(self, prd_text, final_json, summary=<span class="hljs-string">""</span>)</span>:</span>
+        <span class="hljs-string">"""存入历史案例 - 接口不变"""</span>
+        ...
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">search_context</span><span class="hljs-params">(self, query, use_history=True, use_knowledge=True)</span> -&gt; tuple[str, list]:</span>
+        <span class="hljs-string">"""
+        检索知识库 - 接口不变，内部改为混合检索+重排序
+
+        新内部流程:
+        1. 向量检索 Top-10 (LangChain Chroma)
+        2. BM25检索 Top-10
+        3. RRF融合 → Top-6
+        4. BGE-Reranker精排 → Top-3
+        5. 格式化为原有的(context_str, sources)格式返回
+        """</span>
+        ...
+
+    <span class="hljs-comment"># ---- 新增：对外暴露Retriever接口（供Agent工具调用）----</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_knowledge_retriever</span><span class="hljs-params">(self, k: int = <span class="hljs-number">3</span>)</span>:</span>
+        <span class="hljs-string">"""返回LangChain标准Retriever，供LCEL链使用"""</span>
+        <span class="hljs-keyword">return</span> self.knowledge_store.as_retriever(
+            search_kwargs={<span class="hljs-string">"k"</span>: k}
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hybrid_search</span><span class="hljs-params">(self, query: str, top_k: int = <span class="hljs-number">5</span>)</span> -&gt; list[dict]:</span>
+        <span class="hljs-string">"""新增：混合检索接口，供Agent工具调用"""</span>
+        ...
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">parse_file_content</span><span class="hljs-params">(self, file_obj, file_type, model_name=None)</span> -&gt; str:</span>
+        <span class="hljs-string">"""多模态解析 - 接口不变，内部保持Gemini SDK调用（多模态不走LangChain）"""</span>
+        ...
+
+    <span class="hljs-comment"># ---- 私有方法 ----</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_build_bm25_index</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""构建BM25索引（RAGEngine初始化时调用，添加文档后需rebuild）"""</span>
+        all_docs = self.knowledge_store.get()
+        <span class="hljs-keyword">if</span> all_docs:
+            self._bm25_docs = all_docs[<span class="hljs-string">'documents'</span>]
+            self._bm25_index = BM25Okapi([doc.split() <span class="hljs-keyword">for</span> doc <span class="hljs-keyword">in</span> self._bm25_docs])
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_hybrid_score_fusion</span><span class="hljs-params">(self, vector_results, bm25_results,
+                              v_weight=<span class="hljs-number">0.7</span>, b_weight=<span class="hljs-number">0.3</span>)</span> -&gt; list:</span>
+        <span class="hljs-string">"""RRF融合算法，合并两路检索结果"""</span>
+        ...
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_rerank</span><span class="hljs-params">(self, query: str, candidates: list, top_k: int = <span class="hljs-number">3</span>)</span> -&gt; list:</span>
+        <span class="hljs-string">"""BGE-Reranker重排序"""</span>
+        pairs = [[query, doc] <span class="hljs-keyword">for</span> doc <span class="hljs-keyword">in</span> candidates]
+        scores = self.reranker.predict(pairs)
+        sorted_idx = sorted(range(len(scores)), key=<span class="hljs-keyword">lambda</span> i: scores[i], reverse=<span class="hljs-literal">True</span>)
+        <span class="hljs-keyword">return</span> [candidates[i] <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> sorted_idx[:top_k]]
+</div></code></pre>
+<h3 id="43-%E6%B7%B7%E5%90%88%E6%A3%80%E7%B4%A2%E6%B5%81%E7%A8%8B%E5%9B%BE">4.3 混合检索流程图</h3>
+<pre class="hljs"><code><div>用户查询 / PRD文本
+         │
+    ┌────┴─────────────────┐
+    │                      │
+    ▼                      ▼
+向量检索 (LangChain)    BM25检索
+similarity_search()    BM25Okapi.get_scores()
+Top-10结果             Top-10结果
+    │                      │
+    └──────────┬────────────┘
+               ▼
+        RRF融合排序
+        (权重: 向量0.7, BM25 0.3)
+        Top-6候选
+               │
+               ▼
+        BGE-Reranker精排
+        CrossEncoder预测相关度
+        Top-3最终结果
+               │
+               ▼
+     格式化为原有返回格式
+     (context_str, sources)
+</div></code></pre>
+<hr>
+<h2 id="%E4%BA%94llm-client%E5%8D%87%E7%BA%A7%E8%AE%BE%E8%AE%A1">五、LLM Client升级设计</h2>
+<h3 id="51-%E6%96%B0%E6%96%87%E4%BB%B6corelcchainpy">5.1 新文件：<code>core/lc_chain.py</code></h3>
+<p>这是LangChain LCEL链的统一入口，<strong>替代</strong>原有<code>llm_client.py</code>中的函数。</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># core/lc_chain.py 完整接口定义</span>
+
+<span class="hljs-keyword">from</span> langchain_google_genai <span class="hljs-keyword">import</span> ChatGoogleGenerativeAI
+<span class="hljs-keyword">from</span> langchain_core.prompts <span class="hljs-keyword">import</span> ChatPromptTemplate
+<span class="hljs-keyword">from</span> langchain_core.output_parsers <span class="hljs-keyword">import</span> StrOutputParser, JsonOutputParser
+<span class="hljs-keyword">from</span> langchain_core.runnables <span class="hljs-keyword">import</span> RunnablePassthrough, RunnableParallel
+
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LCChainManager</span>:</span>
+    <span class="hljs-string">"""
+    LCEL链管理器
+
+    所有链都通过 | 管道符组装，这是LangChain的标志性语法。
+
+    面试重点: 能解释 prompt | llm | parser 的执行流程
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, api_key: str, model_name: str)</span>:</span>
+        self.llm = ChatGoogleGenerativeAI(
+            model=model_name.replace(<span class="hljs-string">"models/"</span>, <span class="hljs-string">""</span>),
+            google_api_key=api_key,
+            temperature=<span class="hljs-number">0.7</span>,
+            convert_system_message_to_human=<span class="hljs-literal">True</span>  <span class="hljs-comment"># Gemini特殊要求</span>
+        )
+        self.llm_flash = ChatGoogleGenerativeAI(
+            model=<span class="hljs-string">"gemini-1.5-flash"</span>,  <span class="hljs-comment"># 快速模型用于过滤等轻量任务</span>
+            google_api_key=api_key,
+            temperature=<span class="hljs-number">0.3</span>
+        )
+
+    <span class="hljs-comment"># =========== 链1: 测试用例生成链 ===========</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_case_generation_chain</span><span class="hljs-params">(self, retriever=None)</span>:</span>
+        <span class="hljs-string">"""
+        RAG增强的用例生成链
+
+        链结构:
+        {rag_context, prd_text} → prompt | llm | str_parser
+
+        如果传入retriever，则自动从知识库检索上下文。
+        """</span>
+        prompt = ChatPromptTemplate.from_messages([
+            (<span class="hljs-string">"system"</span>, <span class="hljs-string">"{system_prompt}"</span>),
+            (<span class="hljs-string">"human"</span>, <span class="hljs-string">"""
+【需求文档】
+{prd_text}
+
+【知识库参考规范】
+{rag_context}
+
+请生成测试用例（严格JSON格式）:
+"""</span>)
+        ])
+
+        <span class="hljs-keyword">if</span> retriever:
+            <span class="hljs-comment"># 带RAG的链: 自动从知识库检索</span>
+            <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">format_docs</span><span class="hljs-params">(docs)</span>:</span>
+                <span class="hljs-keyword">return</span> <span class="hljs-string">"\n\n&lt;&lt;&lt;RAG_SEP&gt;&gt;&gt;\n\n"</span>.join(
+                    <span class="hljs-string">f"【<span class="hljs-subst">{doc.metadata.get(<span class="hljs-string">'source'</span>,<span class="hljs-string">'规范'</span>)}</span>】\n<span class="hljs-subst">{doc.page_content}</span>"</span>
+                    <span class="hljs-keyword">for</span> doc <span class="hljs-keyword">in</span> docs
+                )
+
+            chain = (
+                RunnableParallel({
+                    <span class="hljs-string">"rag_context"</span>: retriever | format_docs,
+                    <span class="hljs-string">"prd_text"</span>: RunnablePassthrough(),
+                    <span class="hljs-string">"system_prompt"</span>: <span class="hljs-keyword">lambda</span> _: PromptManager.CORE_SYSTEM_PROMPT
+                })
+                | prompt
+                | self.llm
+                | StrOutputParser()
+            )
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-comment"># 不带RAG的链: 手动传入上下文</span>
+            chain = prompt | self.llm | StrOutputParser()
+
+        <span class="hljs-keyword">return</span> chain
+
+    <span class="hljs-comment"># =========== 链2: RAG过滤链（替代原LLM细筛）===========</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_rag_filter_chain</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""
+        知识提纯链（去噪过滤）
+
+        链结构:
+        {query, raw_context} → filter_prompt | llm_flash | str_parser
+
+        注意: 用Flash模型，速度快成本低
+        """</span>
+        prompt = ChatPromptTemplate.from_template(
+            PromptManager.RAG_FILTER_PROMPT
+        )
+        <span class="hljs-keyword">return</span> prompt | self.llm_flash | StrOutputParser()
+
+    <span class="hljs-comment"># =========== 链3: 摘要生成链 ===========</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_summary_chain</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""
+        文档摘要生成链
+
+        链结构:
+        content → summary_prompt | llm_flash | str_parser
+        """</span>
+        prompt = ChatPromptTemplate.from_template(
+            PromptManager.SUMMARY_PROMPT + <span class="hljs-string">"\n\n内容:\n{content}"</span>
+        )
+        <span class="hljs-keyword">return</span> prompt | self.llm_flash | StrOutputParser()
+
+    <span class="hljs-comment"># =========== 链4: 用例精炼链 ===========</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_refinement_chain</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""
+        用例微调链（多轮对话中使用）
+
+        链结构:
+        {user_instruction, rag_context, current_cases} → refine_prompt | llm | str_parser
+        """</span>
+        prompt = ChatPromptTemplate.from_template(
+            PromptManager.get_refinement_prompt(<span class="hljs-string">"{user_instruction}"</span>, <span class="hljs-string">"{rag_context}"</span>)
+        )
+        <span class="hljs-keyword">return</span> prompt | self.llm | StrOutputParser()
+
+    <span class="hljs-comment"># =========== 兼容接口：提供与旧llm_client.py相同的函数签名 ===========</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">chat</span><span class="hljs-params">(self, history: list, user_input: str, system_instruction: str = None)</span>:</span>
+        <span class="hljs-string">"""
+        向后兼容接口，替代原 get_gemini_chat_response()
+
+        内部用LCEL实现，对外行为不变。
+        """</span>
+        <span class="hljs-keyword">from</span> langchain_core.messages <span class="hljs-keyword">import</span> HumanMessage, AIMessage, SystemMessage
+
+        messages = []
+        <span class="hljs-keyword">if</span> system_instruction:
+            messages.append(SystemMessage(content=system_instruction))
+
+        <span class="hljs-keyword">for</span> msg <span class="hljs-keyword">in</span> history:
+            role = msg.get(<span class="hljs-string">'role'</span>, <span class="hljs-string">''</span>)
+            content = str(msg.get(<span class="hljs-string">'parts'</span>, [<span class="hljs-string">''</span>])[<span class="hljs-number">0</span>]) <span class="hljs-keyword">if</span> msg.get(<span class="hljs-string">'parts'</span>) <span class="hljs-keyword">else</span> <span class="hljs-string">''</span>
+            <span class="hljs-keyword">if</span> role == <span class="hljs-string">'user'</span>:
+                messages.append(HumanMessage(content=content))
+            <span class="hljs-keyword">elif</span> role == <span class="hljs-string">'model'</span>:
+                messages.append(AIMessage(content=content))
+
+        messages.append(HumanMessage(content=str(user_input)))
+
+        response = self.llm.invoke(messages)
+
+        <span class="hljs-comment"># 返回与原函数相同格式</span>
+        updated_history = history + [
+            {<span class="hljs-string">'role'</span>: <span class="hljs-string">'user'</span>, <span class="hljs-string">'parts'</span>: [str(user_input)]},
+            {<span class="hljs-string">'role'</span>: <span class="hljs-string">'model'</span>, <span class="hljs-string">'parts'</span>: [response.content]}
+        ]
+        <span class="hljs-keyword">return</span> response.content, updated_history
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">generate_summary</span><span class="hljs-params">(self, content: str)</span> -&gt; str:</span>
+        <span class="hljs-string">"""向后兼容接口，替代原 generate_summary()"""</span>
+        chain = self.build_summary_chain()
+        <span class="hljs-keyword">return</span> chain.invoke({<span class="hljs-string">"content"</span>: content[:<span class="hljs-number">8000</span>]})
+</div></code></pre>
+<hr>
+<h2 id="%E5%85%AD%E5%B7%A5%E5%85%B7%E5%BA%93%E8%AE%BE%E8%AE%A1">六、工具库设计</h2>
+<h3 id="61-%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99">6.1 设计原则</h3>
+<p>Agent的工具遵循<strong>LangChain BaseTool规范</strong>，这样可以直接被LangChain/LangGraph的Agent调用。</p>
+<p>每个工具包含：</p>
+<ul>
+<li><code>name</code>: 工具名（Agent在Prompt中用此名称调用）</li>
+<li><code>description</code>: 工具描述（告诉LLM什么时候该用这个工具）</li>
+<li><code>args_schema</code>: 输入参数的Pydantic模型（类型安全）</li>
+<li><code>_run()</code>: 实际执行逻辑</li>
+</ul>
+<h3 id="62-%E4%BA%94%E4%B8%AA%E5%B7%A5%E5%85%B7%E5%AE%9A%E4%B9%89">6.2 五个工具定义</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># core/agent/tools.py 完整定义</span>
+
+<span class="hljs-keyword">from</span> langchain_core.tools <span class="hljs-keyword">import</span> BaseTool
+<span class="hljs-keyword">from</span> pydantic <span class="hljs-keyword">import</span> BaseModel, Field
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> Optional
+
+<span class="hljs-comment"># =========== 工具1: 搜索技术规范 ===========</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SearchSpecsInput</span><span class="hljs-params">(BaseModel)</span>:</span>
+    query: str = Field(description=<span class="hljs-string">"搜索关键词，如'登录密码规范'、'支付安全要求'"</span>)
+    top_k: int = Field(default=<span class="hljs-number">3</span>, description=<span class="hljs-string">"返回条数"</span>)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SearchTechSpecsTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name: str = <span class="hljs-string">"search_tech_specs"</span>
+    description: str = <span class="hljs-string">"""
+    搜索公司技术规范库。
+    当你需要了解某个功能的技术要求、安全规范、性能指标时使用。
+    例如: 密码规则、接口要求、兼容性要求等。
+    输入: 搜索关键词
+    输出: 相关规范文本片段
+    """</span>
+    args_schema: type = SearchSpecsInput
+    rag_engine: object = <span class="hljs-literal">None</span>  <span class="hljs-comment"># 注入RAGEngine实例</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_run</span><span class="hljs-params">(self, query: str, top_k: int = <span class="hljs-number">3</span>)</span> -&gt; str:</span>
+        results = self.rag_engine.hybrid_search(query, top_k=top_k)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> results:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"未找到相关技术规范，请扩大搜索范围。"</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-string">"\n\n---\n\n"</span>.join([r[<span class="hljs-string">'content'</span>] <span class="hljs-keyword">for</span> r <span class="hljs-keyword">in</span> results])
+
+<span class="hljs-comment"># =========== 工具2: 搜索历史案例 ===========</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SearchHistoryInput</span><span class="hljs-params">(BaseModel)</span>:</span>
+    query: str = Field(description=<span class="hljs-string">"搜索关键词，如'登录功能测试用例'"</span>)
+    top_k: int = Field(default=<span class="hljs-number">2</span>, description=<span class="hljs-string">"返回条数"</span>)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SearchHistoryCasesTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name: str = <span class="hljs-string">"search_history_cases"</span>
+    description: str = <span class="hljs-string">"""
+    搜索历史归档的测试用例。
+    当你需要参考以前生成过的类似用例时使用。
+    可以避免重复劳动，借鉴已验证的测试思路。
+    输入: 功能模块关键词
+    输出: 历史用例JSON
+    """</span>
+    args_schema: type = SearchHistoryInput
+    rag_engine: object = <span class="hljs-literal">None</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_run</span><span class="hljs-params">(self, query: str, top_k: int = <span class="hljs-number">2</span>)</span> -&gt; str:</span>
+        <span class="hljs-comment"># 仅搜索history_collection</span>
+        results = self.rag_engine.history_store.similarity_search(query, k=top_k)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> results:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"暂无相关历史用例。"</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-string">"\n\n"</span>.join([doc.page_content <span class="hljs-keyword">for</span> doc <span class="hljs-keyword">in</span> results])
+
+<span class="hljs-comment"># =========== 工具3: 边界值计算 ===========</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BoundaryCalcInput</span><span class="hljs-params">(BaseModel)</span>:</span>
+    field_name: str = Field(description=<span class="hljs-string">"字段名称，如'密码长度'"</span>)
+    min_value: int = Field(description=<span class="hljs-string">"最小值"</span>)
+    max_value: int = Field(description=<span class="hljs-string">"最大值"</span>)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CalculateBoundaryTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name: str = <span class="hljs-string">"calculate_boundary"</span>
+    description: str = <span class="hljs-string">"""
+    计算字段的边界值测试点。
+    当PRD中有明确的数值范围限制时使用，自动生成7个边界测试点。
+    例如: 密码长度6-20位 → 自动生成5,6,7,13,19,20,21 这7个测试值。
+    输入: 字段名、最小值、最大值
+    输出: 7个边界测试点及其说明
+    """</span>
+    args_schema: type = BoundaryCalcInput
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_run</span><span class="hljs-params">(self, field_name: str, min_value: int, max_value: int)</span> -&gt; str:</span>
+        midpoint = (min_value + max_value) // <span class="hljs-number">2</span>
+        boundary_points = {
+            <span class="hljs-string">f"低于最小值(无效)"</span>: min_value - <span class="hljs-number">1</span>,
+            <span class="hljs-string">f"最小值(有效下界)"</span>: min_value,
+            <span class="hljs-string">f"最小值+1(有效)"</span>: min_value + <span class="hljs-number">1</span>,
+            <span class="hljs-string">f"中间值(有效)"</span>: midpoint,
+            <span class="hljs-string">f"最大值-1(有效)"</span>: max_value - <span class="hljs-number">1</span>,
+            <span class="hljs-string">f"最大值(有效上界)"</span>: max_value,
+            <span class="hljs-string">f"超过最大值(无效)"</span>: max_value + <span class="hljs-number">1</span>,
+        }
+        result = <span class="hljs-string">f"【<span class="hljs-subst">{field_name}</span>】边界值测试点（范围: <span class="hljs-subst">{min_value}</span>-<span class="hljs-subst">{max_value}</span>）:\n"</span>
+        <span class="hljs-keyword">for</span> desc, val <span class="hljs-keyword">in</span> boundary_points.items():
+            result += <span class="hljs-string">f"  - <span class="hljs-subst">{desc}</span>: <span class="hljs-subst">{val}</span>\n"</span>
+        <span class="hljs-keyword">return</span> result
+
+<span class="hljs-comment"># =========== 工具4: 分析PRD功能点 ===========</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AnalyzePRDInput</span><span class="hljs-params">(BaseModel)</span>:</span>
+    prd_text: str = Field(description=<span class="hljs-string">"PRD文档内容"</span>)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AnalyzePRDTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name: str = <span class="hljs-string">"analyze_prd"</span>
+    description: str = <span class="hljs-string">"""
+    深度分析PRD文档，提取所有功能点和测试维度。
+    在开始生成用例前调用，确保不遗漏任何功能模块。
+    输入: PRD文本
+    输出: 结构化的功能点清单（模块、场景、边界条件）
+    """</span>
+    args_schema: type = AnalyzePRDInput
+    llm: object = <span class="hljs-literal">None</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_run</span><span class="hljs-params">(self, prd_text: str)</span> -&gt; str:</span>
+        <span class="hljs-keyword">from</span> langchain_core.prompts <span class="hljs-keyword">import</span> ChatPromptTemplate
+        prompt = ChatPromptTemplate.from_template(<span class="hljs-string">"""
+请分析以下PRD，提取所有测试相关信息：
+
+PRD内容:
+{prd_text}
+
+请输出:
+1. 功能模块列表
+2. 每个模块的核心场景（正常/异常）
+3. 数值边界字段（需要边界值测试的）
+4. 安全/性能要求
+5. 特殊业务规则
+
+格式要求: 简洁的列表，不需要JSON
+"""</span>)
+        chain = prompt | self.llm
+        response = chain.invoke({<span class="hljs-string">"prd_text"</span>: prd_text[:<span class="hljs-number">5000</span>]})
+        <span class="hljs-keyword">return</span> response.content
+
+<span class="hljs-comment"># =========== 工具5: 评估用例质量 ===========</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EvaluateCasesInput</span><span class="hljs-params">(BaseModel)</span>:</span>
+    cases_json: str = Field(description=<span class="hljs-string">"待评估的测试用例JSON字符串"</span>)
+    prd_text: str = Field(description=<span class="hljs-string">"原始需求文档"</span>)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EvaluateCasesTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name: str = <span class="hljs-string">"evaluate_cases"</span>
+    description: str = <span class="hljs-string">"""
+    对已生成的测试用例进行质量评估。
+    检查: 覆盖度、逻辑一致性、重复率、规范遵守情况。
+    当你认为初稿已完成，想验证质量时调用。
+    输入: 测试用例JSON + 原始PRD
+    输出: 质量报告（评分+问题列表）
+    """</span>
+    args_schema: type = EvaluateCasesInput
+    evaluator: object = <span class="hljs-literal">None</span>  <span class="hljs-comment"># 注入Evaluator实例</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_run</span><span class="hljs-params">(self, cases_json: str, prd_text: str)</span> -&gt; str:</span>
+        <span class="hljs-keyword">import</span> json
+        <span class="hljs-keyword">try</span>:
+            cases = json.loads(cases_json)
+        <span class="hljs-keyword">except</span> json.JSONDecodeError:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"错误: cases_json格式不合法，请检查JSON格式"</span>
+
+        report = self.evaluator.evaluate_cases(
+            model_name=<span class="hljs-string">"models/gemini-1.5-pro"</span>,
+            prd_text=prd_text,
+            current_cases=cases
+        )
+
+        <span class="hljs-keyword">return</span> <span class="hljs-string">f"""
+评估完成:
+- 质量评分: <span class="hljs-subst">{report.get(<span class="hljs-string">'score'</span>, <span class="hljs-number">0</span>)}</span>/100
+- 总评: <span class="hljs-subst">{report.get(<span class="hljs-string">'summary'</span>, <span class="hljs-string">''</span>)}</span>
+- 覆盖缺口: <span class="hljs-subst">{report.get(<span class="hljs-string">'coverage_gap'</span>, [])}</span>
+- 逻辑问题: <span class="hljs-subst">{report.get(<span class="hljs-string">'logic_issues'</span>, [])}</span>
+- 重复用例: <span class="hljs-subst">{report.get(<span class="hljs-string">'duplicates'</span>, [])}</span>
+- 优化建议: <span class="hljs-subst">{report.get(<span class="hljs-string">'suggestions'</span>, [])}</span>
+"""</span>
+</div></code></pre>
+<hr>
+<h2 id="%E4%B8%83react-agent%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1">七、ReAct Agent核心设计</h2>
+<h3 id="71-react%E6%8E%A8%E7%90%86%E5%BE%AA%E7%8E%AF">7.1 ReAct推理循环</h3>
+<pre class="hljs"><code><div>用户请求
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│              ReAct Loop                 │
+│                                         │
+│  ┌─────────────────────────────────┐   │
+│  │  Thought: 我需要先分析PRD内容   │   │
+│  └─────────────┬───────────────────┘   │
+│                │                        │
+│  ┌─────────────▼───────────────────┐   │
+│  │  Action: analyze_prd(prd_text)  │   │
+│  └─────────────┬───────────────────┘   │
+│                │                        │
+│  ┌─────────────▼───────────────────┐   │
+│  │  Observation: 发现3个功能模块:  │   │
+│  │  登录/修改密码/找回密码...      │   │
+│  └─────────────┬───────────────────┘   │
+│                │  下一轮               │
+│  ┌─────────────▼───────────────────┐   │
+│  │  Thought: 需要搜索登录规范     │   │
+│  └─────────────┬───────────────────┘   │
+│                │                        │
+│  ┌─────────────▼───────────────────┐   │
+│  │  Action: search_tech_specs      │   │
+│  │         (&quot;登录安全规范&quot;)         │   │
+│  └─────────────┬───────────────────┘   │
+│                │ ...继续循环...         │
+│  ┌─────────────▼───────────────────┐   │
+│  │  Thought: 信息充足，开始生成   │   │
+│  └─────────────┬───────────────────┘   │
+│                │                        │
+│  ┌─────────────▼───────────────────┐   │
+│  │  Final Answer: [JSON用例数组]  │   │
+│  └─────────────────────────────────┘   │
+└─────────────────────────────────────────┘
+</div></code></pre>
+<h3 id="72-coreagentreactagentpy-%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1">7.2 <code>core/agent/react_agent.py</code> 接口设计</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># core/agent/react_agent.py 接口定义（伪代码）</span>
+
+<span class="hljs-keyword">from</span> langchain_google_genai <span class="hljs-keyword">import</span> ChatGoogleGenerativeAI
+<span class="hljs-keyword">from</span> langchain.agents <span class="hljs-keyword">import</span> AgentExecutor, create_react_agent
+<span class="hljs-keyword">from</span> langchain_core.prompts <span class="hljs-keyword">import</span> PromptTemplate
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestCaseReActAgent</span>:</span>
+    <span class="hljs-string">"""
+    真正的ReAct Agent，取代原来的"Prompt → 生成"单步流程。
+
+    核心差异:
+    - 旧: LLM被动执行，一次调用返回结果
+    - 新: Agent主动规划，多轮工具调用后才输出结果
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, api_key: str, model_name: str,
+                 rag_engine, evaluator, memory_system)</span>:</span>
+        <span class="hljs-comment"># 初始化LLM</span>
+        self.llm = ChatGoogleGenerativeAI(
+            model=model_name.replace(<span class="hljs-string">"models/"</span>, <span class="hljs-string">""</span>),
+            google_api_key=api_key,
+            temperature=<span class="hljs-number">0.7</span>
+        )
+
+        <span class="hljs-comment"># 注册工具（注入依赖）</span>
+        self.tools = [
+            AnalyzePRDTool(llm=self.llm),
+            SearchTechSpecsTool(rag_engine=rag_engine),
+            SearchHistoryCasesTool(rag_engine=rag_engine),
+            CalculateBoundaryTool(),
+            EvaluateCasesTool(evaluator=evaluator)
+        ]
+
+        <span class="hljs-comment"># ReAct Prompt模板（关键！决定Agent的行为策略）</span>
+        self.react_prompt = PromptManager.get_react_agent_prompt()
+
+        <span class="hljs-comment"># 创建ReAct Agent</span>
+        self.agent = create_react_agent(
+            llm=self.llm,
+            tools=self.tools,
+            prompt=self.react_prompt
+        )
+
+        <span class="hljs-comment"># AgentExecutor负责循环执行</span>
+        self.executor = AgentExecutor(
+            agent=self.agent,
+            tools=self.tools,
+            verbose=<span class="hljs-literal">True</span>,           <span class="hljs-comment"># 打印推理过程（调试用）</span>
+            max_iterations=<span class="hljs-number">10</span>,      <span class="hljs-comment"># 防止死循环</span>
+            handle_parsing_errors=<span class="hljs-literal">True</span>,  <span class="hljs-comment"># 容错处理</span>
+            memory=memory_system.get_langchain_memory()  <span class="hljs-comment"># 注入记忆</span>
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, prd_text: str, rag_context: str = <span class="hljs-string">""</span>)</span> -&gt; dict:</span>
+        <span class="hljs-string">"""
+        执行ReAct Agent，返回生成结果。
+
+        返回格式（与原有llm_client接口兼容）:
+        {
+            "response_text": "AI的分析说明",
+            "json_data": [...],  # 测试用例列表
+            "thought_chain": [...],  # 推理过程（新增）
+            "tools_used": [...]  # 使用了哪些工具（新增）
+        }
+        """</span>
+        result = self.executor.invoke({
+            <span class="hljs-string">"input"</span>: <span class="hljs-string">f"请分析以下PRD并生成完整的测试用例：\n\n<span class="hljs-subst">{prd_text}</span>"</span>,
+            <span class="hljs-string">"rag_context"</span>: rag_context
+        })
+
+        <span class="hljs-comment"># 解析结果，保持与原有代码兼容的输出格式</span>
+        <span class="hljs-keyword">return</span> self._parse_agent_output(result)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">refine</span><span class="hljs-params">(self, user_instruction: str, current_cases: list)</span> -&gt; dict:</span>
+        <span class="hljs-string">"""
+        基于用户指令精炼已有用例。
+        对应原有的 get_refinement_prompt 流程。
+        """</span>
+        result = self.executor.invoke({
+            <span class="hljs-string">"input"</span>: <span class="hljs-string">f"""
+当前已有测试用例:
+<span class="hljs-subst">{json.dumps(current_cases, ensure_ascii=<span class="hljs-literal">False</span>)}</span>
+
+用户修改指令: <span class="hljs-subst">{user_instruction}</span>
+
+请根据指令修改并输出完整的测试用例JSON数组。
+"""</span>
+        })
+        <span class="hljs-keyword">return</span> self._parse_agent_output(result)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_parse_agent_output</span><span class="hljs-params">(self, result: dict)</span> -&gt; dict:</span>
+        <span class="hljs-string">"""解析AgentExecutor的输出，提取JSON和说明文本"""</span>
+        output = result.get(<span class="hljs-string">'output'</span>, <span class="hljs-string">''</span>)
+        json_data = extract_json_from_text(output)
+
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">"response_text"</span>: output,
+            <span class="hljs-string">"json_data"</span>: json_data,
+            <span class="hljs-string">"thought_chain"</span>: result.get(<span class="hljs-string">'intermediate_steps'</span>, [])
+        }
+</div></code></pre>
+<h3 id="73-%E6%96%B0%E5%A2%9E%E5%88%B0-configpromptspy-%E7%9A%84react-prompt">7.3 新增到 <code>config/prompts.py</code> 的ReAct Prompt</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># 在 config/prompts.py 的 PromptManager 类中新增：</span>
+
+<span class="hljs-meta">@staticmethod</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_react_agent_prompt</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-string">"""
+    ReAct Agent的核心Prompt模板。
+
+    这是整个Agent能否正确工作的关键，需要精心设计。
+    格式严格遵循LangChain的ReAct格式要求。
+    """</span>
+    <span class="hljs-keyword">from</span> langchain_core.prompts <span class="hljs-keyword">import</span> PromptTemplate
+
+    template = <span class="hljs-string">"""你是一个拥有10年经验的资深测试架构师Agent。
+
+你必须严格遵循以下思考-行动-观察循环来完成测试用例生成任务：
+
+【工作流程】
+1. 首先分析PRD，理解需要测试的功能
+2. 搜索相关技术规范，了解约束条件
+3. 必要时搜索历史案例参考
+4. 对有数值限制的字段计算边界值
+5. 生成完整测试用例
+6. 调用评估工具验证质量
+7. 如质量不达标，根据建议修改
+
+【可用工具】
+{tools}
+
+【工具名称列表】
+{tool_names}
+
+【历史对话】
+{chat_history}
+
+【RAG知识库上下文】
+{rag_context}
+
+【当前任务】
+{input}
+
+【思考格式要求 - 必须严格遵守】
+Thought: [你当前的分析和决策]
+Action: [工具名称，必须是工具名称列表中的一个]
+Action Input: [工具的输入参数]
+Observation: [工具返回的结果]
+<span class="hljs-meta">... </span>(重复 Thought/Action/Observation)
+Thought: 我已经收集了足够信息，现在可以给出最终答案
+Final Answer: [最终的测试用例，必须是合法的JSON数组]
+
+{agent_scratchpad}"""</span>
+
+    <span class="hljs-keyword">return</span> PromptTemplate.from_template(template)
+</div></code></pre>
+<hr>
+<h2 id="%E5%85%AB%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1">八、记忆系统设计</h2>
+<h3 id="81-%E4%B8%89%E5%B1%82%E8%AE%B0%E5%BF%86%E6%9E%B6%E6%9E%84">8.1 三层记忆架构</h3>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────────────┐
+│                 MemorySystem                    │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  Layer 1: Working Memory（工作记忆）            │
+│  ────────────────────────────────               │
+│  实现: ConversationBufferWindowMemory(k=3)      │
+│  作用: 最近3轮对话，直接注入LangChain Agent    │
+│  存储: 内存                                     │
+│  对应旧代码: st.session_state['gemini_history'] │
+│                                                 │
+│  Layer 2: Session Memory（会话记忆）            │
+│  ────────────────────────────────               │
+│  实现: JSON文件（data/sessions/）               │
+│  作用: 完整会话历史，跨页面刷新保留            │
+│  存储: 本地文件                                 │
+│  对应旧代码: 无（新增能力）                    │
+│                                                 │
+│  Layer 3: Long-term Memory（长期记忆）          │
+│  ────────────────────────────────               │
+│  实现: ChromaDB（独立collection: user_memory） │
+│  作用: 用户偏好、跨会话经验、重要事件          │
+│  存储: 向量库                                   │
+│  对应旧代码: 无（新增能力）                    │
+│                                                 │
+└─────────────────────────────────────────────────┘
+</div></code></pre>
+<h3 id="82-coreagentmemorypy-%E6%8E%A5%E5%8F%A3%E8%AE%BE%E8%AE%A1">8.2 <code>core/agent/memory.py</code> 接口设计</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># core/agent/memory.py 接口定义</span>
+
+<span class="hljs-keyword">from</span> langchain.memory <span class="hljs-keyword">import</span> ConversationBufferWindowMemory
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AgentMemorySystem</span>:</span>
+    <span class="hljs-string">"""
+    三层记忆系统。
+    对外提供与原有gemini_history格式兼容的接口。
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, chroma_client, session_id: str = <span class="hljs-string">"default"</span>)</span>:</span>
+        self.session_id = session_id
+
+        <span class="hljs-comment"># Layer 1: LangChain原生工作记忆（直接供AgentExecutor使用）</span>
+        self.working_memory = ConversationBufferWindowMemory(
+            k=<span class="hljs-number">3</span>,
+            memory_key=<span class="hljs-string">"chat_history"</span>,
+            return_messages=<span class="hljs-literal">True</span>
+        )
+
+        <span class="hljs-comment"># Layer 2: 会话记忆（持久化到文件）</span>
+        self.session_file = <span class="hljs-string">f"data/sessions/<span class="hljs-subst">{session_id}</span>.json"</span>
+        self.session_history = self._load_session()
+
+        <span class="hljs-comment"># Layer 3: 长期记忆（ChromaDB）</span>
+        self.longterm_collection = chroma_client.get_or_create_collection(
+            name=<span class="hljs-string">f"user_memory_<span class="hljs-subst">{session_id}</span>"</span>
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_langchain_memory</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""返回LangChain Memory对象，供AgentExecutor注入"""</span>
+        <span class="hljs-keyword">return</span> self.working_memory
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">add_interaction</span><span class="hljs-params">(self, user_input: str, ai_response: str)</span>:</span>
+        <span class="hljs-string">"""记录一次交互（自动同步到三层记忆）"""</span>
+        <span class="hljs-comment"># 更新工作记忆</span>
+        self.working_memory.save_context(
+            {<span class="hljs-string">"input"</span>: user_input},
+            {<span class="hljs-string">"output"</span>: ai_response}
+        )
+        <span class="hljs-comment"># 持久化会话记忆</span>
+        self.session_history.append({
+            <span class="hljs-string">"role"</span>: <span class="hljs-string">"user"</span>, <span class="hljs-string">"content"</span>: user_input,
+            <span class="hljs-string">"timestamp"</span>: datetime.now().isoformat()
+        })
+        self.session_history.append({
+            <span class="hljs-string">"role"</span>: <span class="hljs-string">"assistant"</span>, <span class="hljs-string">"content"</span>: ai_response,
+            <span class="hljs-string">"timestamp"</span>: datetime.now().isoformat()
+        })
+        self._save_session()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_gemini_history_format</span><span class="hljs-params">(self)</span> -&gt; list:</span>
+        <span class="hljs-string">"""
+        返回与原有gemini_history格式兼容的历史记录。
+        用于main.py中与旧代码的兼容。
+        """</span>
+        history = []
+        <span class="hljs-keyword">for</span> msg <span class="hljs-keyword">in</span> self.session_history:
+            role = <span class="hljs-string">"user"</span> <span class="hljs-keyword">if</span> msg[<span class="hljs-string">'role'</span>] == <span class="hljs-string">'user'</span> <span class="hljs-keyword">else</span> <span class="hljs-string">"model"</span>
+            history.append({<span class="hljs-string">'role'</span>: role, <span class="hljs-string">'parts'</span>: [msg[<span class="hljs-string">'content'</span>]]})
+        <span class="hljs-keyword">return</span> history
+</div></code></pre>
+<hr>
+<h2 id="%E4%B9%9Dlanggraph%E5%A4%9Aagent%E7%BC%96%E6%8E%92%E8%AE%BE%E8%AE%A1">九、LangGraph多Agent编排设计</h2>
+<h3 id="91-%E7%8A%B6%E6%80%81%E5%9B%BE%E8%AE%BE%E8%AE%A1">9.1 状态图设计</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># core/agent/graph.py 核心设计</span>
+
+<span class="hljs-keyword">from</span> langgraph.graph <span class="hljs-keyword">import</span> StateGraph, END
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> TypedDict, List, Optional
+
+<span class="hljs-comment"># =========== 全局状态定义 ===========</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestCaseState</span><span class="hljs-params">(TypedDict)</span>:</span>
+    <span class="hljs-string">"""整个工作流的共享状态，所有Agent读写同一份"""</span>
+    prd_text: str                          <span class="hljs-comment"># 输入：PRD文档</span>
+    rag_context: str                       <span class="hljs-comment"># 输入：RAG检索结果</span>
+    prd_analysis: Optional[str]            <span class="hljs-comment"># Planner输出：功能点分析</span>
+    generated_cases: Optional[List[dict]] <span class="hljs-comment"># Generator输出：生成的用例</span>
+    evaluation_report: Optional[dict]     <span class="hljs-comment"># Critic输出：质量报告</span>
+    refined_cases: Optional[List[dict]]  <span class="hljs-comment"># Refiner输出：优化后用例</span>
+    iteration_count: int                   <span class="hljs-comment"># 迭代计数（防止死循环）</span>
+    max_iterations: int                    <span class="hljs-comment"># 最大迭代次数（默认3）</span>
+    is_satisfied: bool                     <span class="hljs-comment"># 质量是否达标（评分≥85）</span>
+    final_output: Optional[str]            <span class="hljs-comment"># 最终输出给UI的文本</span>
+</div></code></pre>
+<h3 id="92-%E7%8A%B6%E6%80%81%E5%9B%BE%E6%B5%81%E7%A8%8B">9.2 状态图流程</h3>
+<pre class="hljs"><code><div>                    ┌──────────────┐
+                    │    START     │
+                    │ (接收PRD)    │
+                    └──────┬───────┘
+                           │
+                           ▼
+                    ┌──────────────┐
+                    │   Planner    │
+                    │ 分析PRD功能点│
+                    │ 确定测试范围 │
+                    └──────┬───────┘
+                           │
+                           ▼
+                    ┌──────────────┐
+                    │  Generator   │◄────────────┐
+                    │ 调用ReAct    │             │
+                    │ 生成测试用例 │             │
+                    └──────┬───────┘             │
+                           │                     │
+                           ▼                     │
+                    ┌──────────────┐             │
+                    │   Critic     │             │ 质量不达标
+                    │ 评估质量     │             │ 且未超过最大迭代
+                    │ 打分+反馈    │             │
+                    └──────┬───────┘             │
+                           │                     │
+                    ┌──────▼───────┐             │
+                    │ 质量≥85?     │             │
+                    └──┬───────┬───┘             │
+                       │是     │否               │
+                       ▼       ▼                 │
+                    ┌──────┐ ┌──────────┐        │
+                    │ END  │ │ Refiner  │────────┘
+                    │输出  │ │ 根据反馈 │
+                    └──────┘ │ 优化用例 │
+                             └──────────┘
+</div></code></pre>
+<h3 id="93-%E7%BC%96%E6%8E%92%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84">9.3 编排代码结构</h3>
+<pre class="hljs"><code><div><span class="hljs-comment"># core/agent/graph.py 结构设计</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MultiAgentOrchestrator</span>:</span>
+    <span class="hljs-string">"""
+    多Agent编排器。
+    对外提供统一接口，内部用LangGraph管理Agent协同。
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, api_key, model_name, rag_engine, evaluator)</span>:</span>
+        <span class="hljs-comment"># 初始化各Agent</span>
+        self.planner_llm = ...    <span class="hljs-comment"># gemini-1.5-flash（快速分析）</span>
+        self.generator_agent = TestCaseReActAgent(...)  <span class="hljs-comment"># 主Agent</span>
+        self.critic = evaluator   <span class="hljs-comment"># 复用现有Evaluator</span>
+        self.refiner_llm = ...    <span class="hljs-comment"># gemini-1.5-pro（精细优化）</span>
+
+        <span class="hljs-comment"># 构建状态图</span>
+        self.graph = self._build_graph()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_build_graph</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""构建LangGraph状态图"""</span>
+        workflow = StateGraph(TestCaseState)
+
+        <span class="hljs-comment"># 添加节点</span>
+        workflow.add_node(<span class="hljs-string">"planner"</span>, self._planner_node)
+        workflow.add_node(<span class="hljs-string">"generator"</span>, self._generator_node)
+        workflow.add_node(<span class="hljs-string">"critic"</span>, self._critic_node)
+        workflow.add_node(<span class="hljs-string">"refiner"</span>, self._refiner_node)
+
+        <span class="hljs-comment"># 添加边</span>
+        workflow.set_entry_point(<span class="hljs-string">"planner"</span>)
+        workflow.add_edge(<span class="hljs-string">"planner"</span>, <span class="hljs-string">"generator"</span>)
+        workflow.add_edge(<span class="hljs-string">"generator"</span>, <span class="hljs-string">"critic"</span>)
+
+        <span class="hljs-comment"># 条件边（核心：决定是继续优化还是结束）</span>
+        workflow.add_conditional_edges(
+            <span class="hljs-string">"critic"</span>,
+            self._should_refine,           <span class="hljs-comment"># 判断函数</span>
+            {<span class="hljs-string">"refine"</span>: <span class="hljs-string">"refiner"</span>, <span class="hljs-string">"end"</span>: END}  <span class="hljs-comment"># 路由映射</span>
+        )
+        workflow.add_edge(<span class="hljs-string">"refiner"</span>, <span class="hljs-string">"generator"</span>)
+
+        <span class="hljs-keyword">return</span> workflow.compile()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_should_refine</span><span class="hljs-params">(self, state: TestCaseState)</span> -&gt; str:</span>
+        <span class="hljs-string">"""条件判断：是否需要继续优化"""</span>
+        score = state[<span class="hljs-string">'evaluation_report'</span>].get(<span class="hljs-string">'score'</span>, <span class="hljs-number">0</span>)
+        iterations = state[<span class="hljs-string">'iteration_count'</span>]
+        max_iter = state[<span class="hljs-string">'max_iterations'</span>]
+
+        <span class="hljs-keyword">if</span> score &gt;= <span class="hljs-number">85</span> <span class="hljs-keyword">or</span> iterations &gt;= max_iter:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"end"</span>   <span class="hljs-comment"># 质量达标或超出迭代上限</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-string">"refine"</span>    <span class="hljs-comment"># 继续优化</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, prd_text: str, rag_context: str = <span class="hljs-string">""</span>)</span> -&gt; dict:</span>
+        <span class="hljs-string">"""执行完整的多Agent流程"""</span>
+        initial_state = TestCaseState(
+            prd_text=prd_text,
+            rag_context=rag_context,
+            iteration_count=<span class="hljs-number">0</span>,
+            max_iterations=<span class="hljs-number">3</span>,
+            is_satisfied=<span class="hljs-literal">False</span>,
+            <span class="hljs-comment"># 其余字段初始化为None</span>
+        )
+
+        final_state = self.graph.invoke(initial_state)
+
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">"cases"</span>: final_state[<span class="hljs-string">'generated_cases'</span>],
+            <span class="hljs-string">"score"</span>: final_state[<span class="hljs-string">'evaluation_report'</span>][<span class="hljs-string">'score'</span>],
+            <span class="hljs-string">"iterations"</span>: final_state[<span class="hljs-string">'iteration_count'</span>]
+        }
+</div></code></pre>
+<hr>
+<h2 id="%E5%8D%81%E6%8E%A5%E5%8F%A3%E8%BF%81%E7%A7%BB%E5%AF%B9%E7%85%A7%E8%A1%A8">十、接口迁移对照表</h2>
+<blockquote>
+<p>这是UI层（main.py）改动最小化的关键，保证旧调用方式仍然可用。</p>
+</blockquote>
+<h3 id="101-ragengine%E6%8E%A5%E5%8F%A3%E5%AE%8C%E5%85%A8%E5%90%91%E5%90%8E%E5%85%BC%E5%AE%B9">10.1 RAGEngine接口（完全向后兼容）</h3>
+<table>
+<thead>
+<tr>
+<th>旧接口</th>
+<th>新接口</th>
+<th>变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RAGEngine(api_key)</code></td>
+<td><code>RAGEngine(api_key)</code></td>
+<td>✅ 无变化</td>
+</tr>
+<tr>
+<td><code>rag_engine.add_knowledge(file, summary, content_text, model_name)</code></td>
+<td>同上</td>
+<td>✅ 无变化</td>
+</tr>
+<tr>
+<td><code>rag_engine.add_history_case(prd_text, final_json, summary)</code></td>
+<td>同上</td>
+<td>✅ 无变化</td>
+</tr>
+<tr>
+<td><code>rag_engine.search_context(query, use_history, use_knowledge)</code></td>
+<td>同上，返回格式相同</td>
+<td>✅ 无变化</td>
+</tr>
+<tr>
+<td><code>rag_engine.list_documents(doc_type)</code></td>
+<td>同上</td>
+<td>✅ 无变化</td>
+</tr>
+<tr>
+<td><code>rag_engine.delete_document(doc_id, collection_type)</code></td>
+<td>同上</td>
+<td>✅ 无变化</td>
+</tr>
+<tr>
+<td><code>rag_engine.parse_file_content(file_obj, file_type, model_name)</code></td>
+<td>同上</td>
+<td>✅ 无变化</td>
+</tr>
+<tr>
+<td><code>TextSplitter.recursive_split(text, ...)</code></td>
+<td>内部改用LangChain，类不再对外暴露</td>
+<td>⚠️ 内部改变</td>
+</tr>
+<tr>
+<td>无</td>
+<td><code>rag_engine.hybrid_search(query, top_k)</code></td>
+<td>🆕 新增</td>
+</tr>
+<tr>
+<td>无</td>
+<td><code>rag_engine.get_knowledge_retriever(k)</code></td>
+<td>🆕 新增</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102-llm-client%E6%8E%A5%E5%8F%A3%E5%85%BC%E5%AE%B9%E5%8D%87%E7%BA%A7">10.2 LLM Client接口（兼容+升级）</h3>
+<table>
+<thead>
+<tr>
+<th>旧接口（llm_client.py）</th>
+<th>新接口（lc_chain.py）</th>
+<th>调用方变化</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get_gemini_chat_response(api_key, model_name, history, user_input, system_instruction)</code></td>
+<td><code>LCChainManager(api_key, model_name).chat(history, user_input, system_instruction)</code></td>
+<td>main.py需小改：先实例化LCChainManager</td>
+</tr>
+<tr>
+<td><code>generate_summary(api_key, content, model_name)</code></td>
+<td><code>LCChainManager(api_key, model_name).generate_summary(content)</code></td>
+<td>同上</td>
+</tr>
+<tr>
+<td><code>extract_json_from_text(text)</code></td>
+<td><code>extract_json_from_text(text)</code></td>
+<td>✅ 无变化，函数保留</td>
+</tr>
+<tr>
+<td><code>get_available_models(api_key)</code></td>
+<td><code>get_available_models(api_key)</code></td>
+<td>✅ 无变化，函数保留</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103-%E6%96%B0%E5%A2%9E%E6%8E%A5%E5%8F%A3agent%E7%9B%B8%E5%85%B3">10.3 新增接口（Agent相关）</h3>
+<table>
+<thead>
+<tr>
+<th>新接口</th>
+<th>位置</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MultiAgentOrchestrator(api_key, model, rag_engine, evaluator)</code></td>
+<td><code>core/agent/graph.py</code></td>
+<td>多Agent编排器</td>
+</tr>
+<tr>
+<td><code>orchestrator.run(prd_text, rag_context)</code></td>
+<td>同上</td>
+<td>自动化生成+评估+优化</td>
+</tr>
+<tr>
+<td><code>TestCaseReActAgent(api_key, model, rag_engine, evaluator, memory)</code></td>
+<td><code>core/agent/react_agent.py</code></td>
+<td>单个ReAct Agent</td>
+</tr>
+<tr>
+<td><code>AgentMemorySystem(chroma_client, session_id)</code></td>
+<td><code>core/agent/memory.py</code></td>
+<td>三层记忆</td>
+</tr>
+<tr>
+<td><code>memory.get_langchain_memory()</code></td>
+<td>同上</td>
+<td>供AgentExecutor注入</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E5%8D%81%E4%B8%80ui%E9%80%82%E9%85%8D%E8%AF%B4%E6%98%8E">十一、UI适配说明</h2>
+<h3 id="111-mainpy-%E7%9A%84%E6%94%B9%E5%8A%A8%E7%AD%96%E7%95%A5">11.1 main.py 的改动策略</h3>
+<p><strong>原则：改动最小化，仅修改调用层，不改任何UI逻辑</strong></p>
+<p>需要修改的地方（共3处）：</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># ========== 改动1: 初始化部分（约10行）==========</span>
+
+<span class="hljs-comment"># 旧代码（main.py L62-70）</span>
+rag_engine = RAGEngine(api_key)
+evaluator = Evaluator(api_key)
+
+<span class="hljs-comment"># 新代码（新增两行）</span>
+<span class="hljs-keyword">from</span> core.lc_chain <span class="hljs-keyword">import</span> LCChainManager
+<span class="hljs-keyword">from</span> core.agent.graph <span class="hljs-keyword">import</span> MultiAgentOrchestrator
+<span class="hljs-keyword">from</span> core.agent.memory <span class="hljs-keyword">import</span> AgentMemorySystem
+
+rag_engine = RAGEngine(api_key)       <span class="hljs-comment"># 不变，向后兼容</span>
+evaluator = Evaluator(api_key)         <span class="hljs-comment"># 不变</span>
+lc_manager = LCChainManager(api_key, selected_model)  <span class="hljs-comment"># 新增</span>
+orchestrator = MultiAgentOrchestrator(api_key, selected_model, rag_engine, evaluator)  <span class="hljs-comment"># 新增</span>
+memory = AgentMemorySystem(rag_engine.client)  <span class="hljs-comment"># 新增</span>
+
+
+<span class="hljs-comment"># ========== 改动2: 生成按钮回调（约20行）==========</span>
+
+<span class="hljs-comment"># 旧代码（main.py L166-172）</span>
+resp_text, updated_history = get_gemini_chat_response(
+    api_key, selected_model,
+    st.session_state[<span class="hljs-string">'gemini_history'</span>],
+    full_payload,
+    system_instruction=PromptManager.CORE_SYSTEM_PROMPT
+)
+st.session_state[<span class="hljs-string">'gemini_history'</span>] = updated_history
+
+<span class="hljs-comment"># 新代码（两种模式可切换）</span>
+<span class="hljs-keyword">if</span> st.session_state.get(<span class="hljs-string">'use_agent_mode'</span>, <span class="hljs-literal">True</span>):
+    <span class="hljs-comment"># Agent模式：自动规划+工具调用+迭代优化</span>
+    result = orchestrator.run(
+        prd_text=st.session_state[<span class="hljs-string">'prd_context'</span>],
+        rag_context=st.session_state[<span class="hljs-string">'rag_context'</span>]
+    )
+    resp_text = result.get(<span class="hljs-string">'response_text'</span>, <span class="hljs-string">''</span>)
+    <span class="hljs-comment"># 更新记忆</span>
+    memory.add_interaction(str(full_payload), resp_text)
+    st.session_state[<span class="hljs-string">'gemini_history'</span>] = memory.get_gemini_history_format()
+<span class="hljs-keyword">else</span>:
+    <span class="hljs-comment"># 兼容模式：原有单次调用（保留作为回退）</span>
+    resp_text, updated_history = lc_manager.chat(
+        st.session_state[<span class="hljs-string">'gemini_history'</span>],
+        full_payload,
+        system_instruction=PromptManager.CORE_SYSTEM_PROMPT
+    )
+    st.session_state[<span class="hljs-string">'gemini_history'</span>] = updated_history
+
+
+<span class="hljs-comment"># ========== 改动3: 多轮对话回调（约10行）==========</span>
+
+<span class="hljs-comment"># 旧代码（main.py L236-240）</span>
+resp_text, updated_history = get_gemini_chat_response(
+    api_key, selected_model,
+    st.session_state[<span class="hljs-string">'gemini_history'</span>],
+    refine_prompt_str,
+    system_instruction=PromptManager.CORE_SYSTEM_PROMPT
+)
+
+<span class="hljs-comment"># 新代码</span>
+resp_text, updated_history = lc_manager.chat(
+    st.session_state[<span class="hljs-string">'gemini_history'</span>],
+    refine_prompt_str,
+    system_instruction=PromptManager.CORE_SYSTEM_PROMPT
+)
+</div></code></pre>
+<h3 id="112-%E6%96%B0%E5%A2%9Eui%E5%8A%9F%E8%83%BD%E5%8F%AF%E9%80%89">11.2 新增UI功能（可选）</h3>
+<p>在侧边栏添加Agent模式切换开关：</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># sidebar.py 新增（可选，不破坏原有功能）</span>
+agent_mode = st.toggle(<span class="hljs-string">"🤖 Agent模式（自动规划+迭代优化）"</span>, value=<span class="hljs-literal">True</span>)
+st.session_state[<span class="hljs-string">'use_agent_mode'</span>] = agent_mode
+
+<span class="hljs-keyword">if</span> agent_mode:
+    st.caption(<span class="hljs-string">"AI将自主规划任务并多轮优化"</span>)
+<span class="hljs-keyword">else</span>:
+    st.caption(<span class="hljs-string">"传统模式：单次Prompt生成"</span>)
+</div></code></pre>
+<hr>
+<h2 id="%E5%8D%81%E4%BA%8C%E5%88%86%E9%98%B6%E6%AE%B5%E5%AE%9E%E6%96%BD%E8%AE%A1%E5%88%92">十二、分阶段实施计划</h2>
+<h3 id="phase-0-%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%8705%E5%A4%A9">Phase 0: 环境准备（0.5天）</h3>
+<ul>
+<li><input type="checkbox" id="checkbox0"><label for="checkbox0">安装新依赖：</label><code>pip install langchain langgraph langchain-google-genai ...</code></li>
+<li><input type="checkbox" id="checkbox1"><label for="checkbox1">验证BGE-Reranker模型可下载</label></li>
+<li><input type="checkbox" id="checkbox2"><label for="checkbox2">更新 </label><code>requirements.txt</code></li>
+</ul>
+<h3 id="phase-1-rag%E5%B1%82%E5%8D%87%E7%BA%A71%E5%A4%A9">Phase 1: RAG层升级（1天）</h3>
+<p>改动文件：<code>core/rag_engine.py</code></p>
+<ul>
+<li><input type="checkbox" id="checkbox3"><label for="checkbox3">替换 </label><code>TextSplitter</code> → <code>RecursiveCharacterTextSplitter</code></li>
+<li><input type="checkbox" id="checkbox4"><label for="checkbox4">替换 ChromaDB 原始API → </label><code>langchain_chroma.Chroma</code></li>
+<li><input type="checkbox" id="checkbox5"><label for="checkbox5">实现 </label><code>_build_bm25_index()</code> 和 <code>hybrid_search()</code></li>
+<li><input type="checkbox" id="checkbox6"><label for="checkbox6">实现 </label><code>_rerank()</code> with BGE-Reranker</li>
+<li><input type="checkbox" id="checkbox7"><label for="checkbox7"></label><strong>验证</strong>：运行原有UI，确认搜索结果正常</li>
+</ul>
+<h3 id="phase-2-llm-client%E5%8D%87%E7%BA%A705%E5%A4%A9">Phase 2: LLM Client升级（0.5天）</h3>
+<p>新建文件：<code>core/lc_chain.py</code></p>
+<ul>
+<li><input type="checkbox" id="checkbox8"><label for="checkbox8">实现 </label><code>LCChainManager</code> 类</li>
+<li><input type="checkbox" id="checkbox9"><label for="checkbox9">实现 </label><code>build_case_generation_chain()</code></li>
+<li><input type="checkbox" id="checkbox10"><label for="checkbox10">实现 </label><code>build_rag_filter_chain()</code></li>
+<li><input type="checkbox" id="checkbox11"><label for="checkbox11">实现 </label><code>chat()</code> 兼容接口</li>
+<li><input type="checkbox" id="checkbox12"><label for="checkbox12">实现 </label><code>generate_summary()</code> 兼容接口</li>
+<li><input type="checkbox" id="checkbox13"><label for="checkbox13"></label><strong>验证</strong>：替换 main.py 的 <code>get_gemini_chat_response</code> 调用，功能不变</li>
+</ul>
+<h3 id="phase-3-%E5%B7%A5%E5%85%B7%E5%BA%9305%E5%A4%A9">Phase 3: 工具库（0.5天）</h3>
+<p>新建文件：<code>core/agent/tools.py</code></p>
+<ul>
+<li><input type="checkbox" id="checkbox14"><label for="checkbox14">实现5个工具类</label></li>
+<li><input type="checkbox" id="checkbox15"><label for="checkbox15">为每个工具编写测试（直接调用 </label><code>tool.run()</code>）</li>
+<li><input type="checkbox" id="checkbox16"><label for="checkbox16"></label><strong>验证</strong>：每个工具独立测试</li>
+</ul>
+<h3 id="phase-4-%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F05%E5%A4%A9">Phase 4: 记忆系统（0.5天）</h3>
+<p>新建文件：<code>core/agent/memory.py</code></p>
+<ul>
+<li><input type="checkbox" id="checkbox17"><label for="checkbox17">实现 </label><code>AgentMemorySystem</code></li>
+<li><input type="checkbox" id="checkbox18"><label for="checkbox18">实现三层记忆的读写</label></li>
+<li><input type="checkbox" id="checkbox19"><label for="checkbox19">实现 </label><code>get_gemini_history_format()</code> 兼容接口</li>
+<li><input type="checkbox" id="checkbox20"><label for="checkbox20"></label><strong>验证</strong>：多次交互后刷新页面，历史记录仍在</li>
+</ul>
+<h3 id="phase-5-react-agent1%E5%A4%A9">Phase 5: ReAct Agent（1天）</h3>
+<p>新建文件：<code>core/agent/react_agent.py</code></p>
+<ul>
+<li><input type="checkbox" id="checkbox21"><label for="checkbox21">在 </label><code>config/prompts.py</code> 新增 <code>get_react_agent_prompt()</code></li>
+<li><input type="checkbox" id="checkbox22"><label for="checkbox22">实现 </label><code>TestCaseReActAgent</code> 类</li>
+<li><input type="checkbox" id="checkbox23"><label for="checkbox23">调试 ReAct 推理循环（verbose=True 观察推理过程）</label></li>
+<li><input type="checkbox" id="checkbox24"><label for="checkbox24"></label><strong>验证</strong>：对测试PRD，观察Agent是否主动调用工具</li>
+</ul>
+<h3 id="phase-6-langgraph%E7%BC%96%E6%8E%921%E5%A4%A9">Phase 6: LangGraph编排（1天）</h3>
+<p>新建文件：<code>core/agent/graph.py</code></p>
+<ul>
+<li><input type="checkbox" id="checkbox25"><label for="checkbox25">实现 </label><code>MultiAgentOrchestrator</code></li>
+<li><input type="checkbox" id="checkbox26"><label for="checkbox26">构建状态图（Planner → Generator → Critic → Refiner）</label></li>
+<li><input type="checkbox" id="checkbox27"><label for="checkbox27">调试条件边逻辑</label></li>
+<li><input type="checkbox" id="checkbox28"><label for="checkbox28"></label><strong>验证</strong>：低质量用例时，观察是否自动触发Refiner</li>
+</ul>
+<h3 id="phase-7-ui%E9%9B%86%E6%88%9005%E5%A4%A9">Phase 7: UI集成（0.5天）</h3>
+<p>改动文件：<code>ui/main.py</code>（3处改动）</p>
+<ul>
+<li><input type="checkbox" id="checkbox29"><label for="checkbox29">初始化部分新增实例化</label></li>
+<li><input type="checkbox" id="checkbox30"><label for="checkbox30">生成按钮回调改为调用 </label><code>orchestrator.run()</code></li>
+<li><input type="checkbox" id="checkbox31"><label for="checkbox31">可选：sidebar 新增 Agent 模式切换</label></li>
+<li><input type="checkbox" id="checkbox32"><label for="checkbox32"></label><strong>验证</strong>：完整端到端测试</li>
+</ul>
+<hr>
+<h2 id="%E9%99%84%E5%BD%95a%E7%AE%80%E5%8E%86%E6%8F%8F%E8%BF%B0%E6%A8%A1%E6%9D%BF%E9%87%8D%E6%9E%84%E5%AE%8C%E6%88%90%E5%90%8E%E4%BD%BF%E7%94%A8">附录A：简历描述模板（重构完成后使用）</h2>
+<pre class="hljs"><code><div>【精准版】
+基于 LangChain 框架（v0.3）对 RAG 检索管道进行重构：
+引入 RecursiveCharacterTextSplitter 替换自研文本切片模块；
+实现向量检索 + BM25 混合检索（RRF融合），并集成 BGE-Reranker 进行二次精排，
+检索准确率提升约30%；使用 LCEL 管道符（|）构建声明式调用链。
+
+基于 LangGraph 实现多 Agent 协同系统：
+设计 Planner-Generator-Critic-Refiner 四角色状态图，
+引入带条件边的反馈循环（评分&lt;85时自动触发 Refiner），
+实现测试用例生成从单次调用到自动化迭代优化的架构升级。
+
+集成 LangChain AgentExecutor + create_react_agent 实现真正的 ReAct 推理循环，
+Agent 可主动调用 5 个结构化工具（RAG检索/边界值计算/质量评估等），
+实现&quot;思考→行动→观察&quot;的自主任务规划能力。
+</div></code></pre>
+<hr>
+<h2 id="%E9%99%84%E5%BD%95b%E9%9D%A2%E8%AF%95faq">附录B：面试FAQ</h2>
+<p><strong>Q: 你为什么用LangGraph而不是直接写循环？</strong></p>
+<blockquote>
+<p>LangGraph将工作流可视化为有向图，支持状态共享、条件路由和循环控制。
+相比手写循环，它的优势是：</p>
+<ol>
+<li>状态类型安全（TypedDict）</li>
+<li>条件边让跳转逻辑清晰可读</li>
+<li>内置检查点（Checkpoint）支持暂停和恢复</li>
+</ol>
+</blockquote>
+<p><strong>Q: ReAct和普通Prompt有什么本质区别？</strong></p>
+<blockquote>
+<p>普通Prompt是&quot;单轮感知-生成&quot;，AI被动执行；
+ReAct是&quot;多轮规划-行动-观察&quot;循环，AI主动决策：
+它可以决定&quot;我现在需要搜索规范&quot;，然后真的调用工具，
+根据工具结果再调整下一步策略，直到任务完成。</p>
+</blockquote>
+<p><strong>Q: BGE-Reranker和向量检索有什么区别？</strong></p>
+<blockquote>
+<p>向量检索用Bi-Encoder：query和document分别编码，计算点积，速度快但精度有限。
+BGE-Reranker用Cross-Encoder：query和document拼接后联合编码，精度更高但速度慢。
+因此最优实践是：向量检索召回Top-20（快），Reranker精排取Top-3（准）。</p>
+</blockquote>
+<pre class="hljs"><code><div></div></code></pre>
+
+</body>
+</html>

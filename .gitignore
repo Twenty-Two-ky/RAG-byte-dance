@@ -1,0 +1,20 @@
+# 1. Python 缓存
+__pycache__/
+*.pyc
+
+# 2. 环境变量与密钥 (绝不能提交)
+.env
+.venv
+venv/
+
+# 3. IDE 配置
+.vscode/
+.idea/
+
+# 4. 【核心】忽略数据文件，防止 Key 和公司文档泄露
+data/vector_db/
+data/raw_files/
+data/user_config.json
+
+# 5. 保留 data 目录结构
+!data/.gitkeep

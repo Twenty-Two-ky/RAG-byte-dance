@@ -1,0 +1,128 @@
+[
+  {
+    "id": "TC_001",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入正确的手机号和正确的验证码",
+    "expected": "登录成功，页面跳转到首页",
+    "priority": "P0",
+    "design_strategy": "正常登录"
+  },
+  {
+    "id": "TC_002",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入正确的手机号和错误的验证码",
+    "expected": "登录失败，提示验证码错误",
+    "priority": "P1",
+    "design_strategy": "错误验证码"
+  },
+  {
+    "id": "TC_003",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入错误的手机号和正确的验证码",
+    "expected": "登录失败，提示手机号未注册或错误",
+    "priority": "P1",
+    "design_strategy": "错误手机号"
+  },
+  {
+    "id": "TC_004",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "手机号输入框为空，验证码输入框为空",
+    "expected": "登录失败，提示手机号和验证码不能为空",
+    "priority": "P1",
+    "design_strategy": "空输入"
+  },
+  {
+    "id": "TC_005",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入正确的手机号，验证码输入框为空",
+    "expected": "登录失败，提示验证码不能为空",
+    "priority": "P1",
+    "design_strategy": "空输入"
+  },
+  {
+    "id": "TC_006",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "手机号输入框为空，输入正确的验证码",
+    "expected": "登录失败，提示手机号不能为空",
+    "priority": "P1",
+    "design_strategy": "空输入"
+  },
+  {
+    "id": "TC_007",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入10位手机号和正确的验证码",
+    "expected": "登录失败，提示手机号格式不正确",
+    "priority": "P2",
+    "design_strategy": "边界值分析"
+  },
+  {
+    "id": "TC_008",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入12位手机号和正确的验证码",
+    "expected": "登录失败，提示手机号格式不正确",
+    "priority": "P2",
+    "design_strategy": "边界值分析"
+  },
+  {
+    "id": "TC_009",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "手机号输入特殊字符和正确的验证码",
+    "expected": "登录失败，提示手机号格式不正确",
+    "priority": "P2",
+    "design_strategy": "特殊字符"
+  },
+  {
+    "id": "TC_010",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入正确的手机号，验证码输入特殊字符",
+    "expected": "登录失败，提示验证码格式不正确",
+    "priority": "P2",
+    "design_strategy": "特殊字符"
+  },
+  {
+    "id": "TC_011",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入正确的手机号，连续5次输入错误的验证码",
+    "expected": "账号被锁定，提示稍后重试",
+    "priority": "P0",
+    "design_strategy": "暴力破解防御"
+  },
+  {
+    "id": "TC_012",
+    "module": "登录",
+    "precondition": "用户已登录成功，保持页面静止30分钟",
+    "step": "保持登录状态30分钟后，刷新页面或进行其他操作",
+    "expected": "Session/Token失效，系统强制用户退出到登录页面",
+    "priority": "P0",
+    "design_strategy": "会话生命周期管理"
+  },
+  {
+    "id": "TC_013",
+    "module": "登录",
+    "precondition": "管理员重置用户密码为默认密码（如123456）",
+    "step": "使用默认密码进行首次登录",
+    "expected": "强制用户修改密码后才能登录",
+    "priority": "P0",
+    "design_strategy": "初始密码强制策略"
+  },
+  {
+    "id": "TC_014",
+    "module": "登录",
+    "precondition": "用户已打开登录页面",
+    "step": "输入正确的手机号和已过期的验证码",
+    "expected": "登录失败，提示验证码已过期",
+    "priority": "P1",
+    "design_strategy": "验证码过期"
+  }
+]

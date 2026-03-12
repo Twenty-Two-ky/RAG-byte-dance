@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Agent与RAG专家级优化方案.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="agent%E4%B8%8Erag%E4%B8%93%E5%AE%B6%E7%BA%A7%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88">Agent与RAG专家级优化方案</h1>
+<blockquote>
+<p><strong>分析视角</strong>: 资深Agent应用架构师 + RAG系统专家
+<strong>目标</strong>: 从原型Demo提升到生产级AI应用
+<strong>日期</strong>: 2026-03-03</p>
+</blockquote>
+<hr>
+<h2 id="%F0%9F%93%8B-%E7%9B%AE%E5%BD%95">📋 目录</h2>
+<ul>
+<li><a href="#%E4%B8%80%E7%8E%B0%E7%8A%B6%E5%88%86%E6%9E%90">一、现状分析</a></li>
+<li><a href="#%E4%BA%8Crag%E7%B3%BB%E7%BB%9F%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%8C%96">二、RAG系统深度优化</a></li>
+<li><a href="#%E4%B8%89agent%E6%9E%B6%E6%9E%84%E5%8D%87%E7%BA%A7">三、Agent架构升级</a></li>
+<li><a href="#%E5%9B%9B%E5%B7%A5%E4%B8%9A%E7%BA%A7%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5">四、工业级最佳实践</a></li>
+<li><a href="#%E4%BA%94%E5%AE%9E%E6%96%BD%E8%B7%AF%E7%BA%BF%E5%9B%BE">五、实施路线图</a></li>
+</ul>
+<hr>
+<h2 id="%E4%B8%80%E7%8E%B0%E7%8A%B6%E5%88%86%E6%9E%90">一、现状分析</h2>
+<h3 id="11-%E5%BD%93%E5%89%8Drag%E5%AE%9E%E7%8E%B0%E7%9A%84%E9%97%AE%E9%A2%98">1.1 当前RAG实现的问题</h3>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%981-chunking%E7%AD%96%E7%95%A5%E8%BF%87%E4%BA%8E%E7%AE%80%E5%8D%95">❌ 问题1: Chunking策略过于简单</h4>
+<p><strong>当前实现</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># rag_engine.py L26-82</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">recursive_split</span><span class="hljs-params">(text, chunk_size=<span class="hljs-number">500</span>, chunk_overlap=<span class="hljs-number">100</span>)</span>:</span>
+    <span class="hljs-string">"""固定窗口切片,在标点符号处切分"""</span>
+    <span class="hljs-comment"># 问题:</span>
+    <span class="hljs-comment"># 1. 没有考虑语义完整性</span>
+    <span class="hljs-comment"># 2. 固定chunk_size=500对所有文档统一处理</span>
+    <span class="hljs-comment"># 3. 可能在关键信息中间切断</span>
+</div></code></pre>
+<p><strong>问题分析</strong>:</p>
+<ul>
+<li>📄 <strong>技术文档</strong> vs <strong>对话记录</strong> 需要不同的切片策略</li>
+<li>🔗 <strong>跨段落引用</strong> 会被切断(如&quot;参见第3节&quot;这种上下文)</li>
+<li>📊 <strong>表格、代码块</strong> 等结构化内容被破坏</li>
+</ul>
+<p><strong>行业标准</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># LangChain的做法</span>
+<span class="hljs-keyword">from</span> langchain.text_splitter <span class="hljs-keyword">import</span> RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=<span class="hljs-number">1000</span>,
+    chunk_overlap=<span class="hljs-number">200</span>,
+    separators=[<span class="hljs-string">"\n\n"</span>, <span class="hljs-string">"\n"</span>, <span class="hljs-string">"。"</span>, <span class="hljs-string">"."</span>, <span class="hljs-string">" "</span>, <span class="hljs-string">""</span>],  <span class="hljs-comment"># 优先级递减</span>
+    length_function=len
+)
+</div></code></pre>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%982-embedding%E6%A8%A1%E5%9E%8B%E7%A1%AC%E7%BC%96%E7%A0%81%E4%B8%94%E5%8D%95%E4%B8%80">❌ 问题2: Embedding模型硬编码且单一</h4>
+<p><strong>当前实现</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># rag_engine.py L253</span>
+result = genai.embed_content(
+    model=<span class="hljs-string">"models/text-embedding-004"</span>,  <span class="hljs-comment"># 硬编码!</span>
+    content=input
+)
+</div></code></pre>
+<p><strong>问题</strong>:</p>
+<ol>
+<li><strong>依赖外网API</strong> - 国内访问不稳定,需要代理</li>
+<li><strong>成本高</strong> - 大量文档向量化时费用高昂</li>
+<li><strong>无法定制</strong> - 不能针对测试领域做Fine-tune</li>
+<li><strong>单一模型</strong> - 无法A/B测试不同Embedding效果</li>
+</ol>
+<p><strong>生产级解决方案</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># 支持多种Embedding后端</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EmbeddingFactory</span>:</span>
+<span class="hljs-meta">    @staticmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">create</span><span class="hljs-params">(backend=<span class="hljs-string">"gemini"</span>, model_name=None, local_path=None)</span>:</span>
+        <span class="hljs-keyword">if</span> backend == <span class="hljs-string">"gemini"</span>:
+            <span class="hljs-keyword">return</span> GeminiEmbedingFunction(model_name)
+        <span class="hljs-keyword">elif</span> backend == <span class="hljs-string">"bge"</span>:
+            <span class="hljs-comment"># BGE-M3: 中文效果优秀,支持本地部署</span>
+            <span class="hljs-keyword">from</span> FlagEmbedding <span class="hljs-keyword">import</span> BGEM3FlagModel
+            <span class="hljs-keyword">return</span> BGEEmbeddingFunction(model_path=local_path <span class="hljs-keyword">or</span> <span class="hljs-string">"BAAI/bge-m3"</span>)
+        <span class="hljs-keyword">elif</span> backend == <span class="hljs-string">"sentence-transformers"</span>:
+            <span class="hljs-comment"># 轻量级本地模型</span>
+            <span class="hljs-keyword">from</span> sentence_transformers <span class="hljs-keyword">import</span> SentenceTransformer
+            <span class="hljs-keyword">return</span> STEmbeddingFunction(model_name <span class="hljs-keyword">or</span> <span class="hljs-string">"all-MiniLM-L6-v2"</span>)
+        <span class="hljs-keyword">elif</span> backend == <span class="hljs-string">"openai"</span>:
+            <span class="hljs-keyword">return</span> OpenAIEmbeddingFunction(model_name <span class="hljs-keyword">or</span> <span class="hljs-string">"text-embedding-3-small"</span>)
+</div></code></pre>
+<p><strong>对比评测</strong> (中文测试用例生成场景):</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>维度</th>
+<th>中文支持</th>
+<th>成本</th>
+<th>部署</th>
+<th>推荐度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gemini text-embedding-004</td>
+<td>768</td>
+<td>⭐⭐⭐⭐</td>
+<td>高</td>
+<td>云端</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td>BGE-M3</td>
+<td>1024</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>免费</td>
+<td>本地</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>M3E-base</td>
+<td>768</td>
+<td>⭐⭐⭐⭐</td>
+<td>免费</td>
+<td>本地</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>OpenAI ada-002</td>
+<td>1536</td>
+<td>⭐⭐⭐</td>
+<td>中</td>
+<td>云端</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%983-%E7%BC%BA%E5%B0%91%E6%B7%B7%E5%90%88%E6%A3%80%E7%B4%A2hybrid-search">❌ 问题3: 缺少混合检索(Hybrid Search)</h4>
+<p><strong>当前实现</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># rag_engine.py L230-245</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">search_context</span><span class="hljs-params">(self, query, use_history=True, use_knowledge=True)</span>:</span>
+    <span class="hljs-comment"># 只有向量检索!</span>
+    res_k = self.knowledge_coll.query(query_texts=[query], n_results=<span class="hljs-number">3</span>)
+    res_h = self.history_coll.query(query_texts=[query], n_results=<span class="hljs-number">1</span>)
+</div></code></pre>
+<p><strong>问题</strong>:</p>
+<ul>
+<li>🔍 <strong>向量检索</strong> 擅长语义相似,但对<strong>关键词精确匹配</strong>能力弱</li>
+<li>🎯 例如: 用户查询&quot;TC_001用例&quot;,向量检索可能返回&quot;TC_100&quot;(语义相似但不是目标)</li>
+</ul>
+<p><strong>业界最佳实践: 混合检索 (Hybrid Search)</strong></p>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────────────┐
+│              Query: &quot;登录密码长度限制&quot;            │
+└────────────┬────────────────────────────────────┘
+             │
+    ┌────────┴─────────┐
+    │                  │
+    ▼                  ▼
+┌─────────┐      ┌──────────┐
+│ 向量检索 │      │ BM25检索  │
+│(语义)   │      │(关键词)   │
+└────┬────┘      └─────┬────┘
+     │                 │
+     │  Top-10         │  Top-10
+     └────────┬────────┘
+              ▼
+       ┌────────────┐
+       │ Re-ranking │  (二次排序)
+       │  (RRF融合) │
+       └──────┬─────┘
+              │
+              ▼  Top-3
+         最终结果
+</div></code></pre>
+<p><strong>实现代码</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> rank_bm25 <span class="hljs-keyword">import</span> BM25Okapi
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HybridRAGEngine</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, api_key, bm25_weight=<span class="hljs-number">0.3</span>, vector_weight=<span class="hljs-number">0.7</span>)</span>:</span>
+        self.chroma_client = chromadb.PersistentClient(path=DB_PATH)
+        self.embedding_fn = EmbeddingFactory.create(<span class="hljs-string">"bge"</span>)
+        self.bm25_weight = bm25_weight
+        self.vector_weight = vector_weight
+
+        <span class="hljs-comment"># 构建BM25索引</span>
+        self._build_bm25_index()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_build_bm25_index</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""预处理: 为所有文档构建BM25索引"""</span>
+        all_docs = self.knowledge_coll.get()
+        self.bm25_corpus = [doc.split() <span class="hljs-keyword">for</span> doc <span class="hljs-keyword">in</span> all_docs[<span class="hljs-string">'documents'</span>]]
+        self.bm25 = BM25Okapi(self.bm25_corpus)
+        self.doc_ids = all_docs[<span class="hljs-string">'ids'</span>]
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hybrid_search</span><span class="hljs-params">(self, query, top_k=<span class="hljs-number">5</span>)</span>:</span>
+        <span class="hljs-string">"""混合检索: 向量 + BM25"""</span>
+        <span class="hljs-comment"># 1. 向量检索</span>
+        vector_results = self.knowledge_coll.query(
+            query_texts=[query],
+            n_results=top_k * <span class="hljs-number">2</span>  <span class="hljs-comment"># 召回更多候选</span>
+        )
+
+        <span class="hljs-comment"># 2. BM25检索</span>
+        query_tokens = query.split()
+        bm25_scores = self.bm25.get_scores(query_tokens)
+        bm25_top_indices = np.argsort(bm25_scores)[-top_k*<span class="hljs-number">2</span>:][::<span class="hljs-number">-1</span>]
+
+        <span class="hljs-comment"># 3. 归一化分数</span>
+        vector_ids = vector_results[<span class="hljs-string">'ids'</span>][<span class="hljs-number">0</span>]
+        vector_distances = vector_results[<span class="hljs-string">'distances'</span>][<span class="hljs-number">0</span>]
+        vector_scores = <span class="hljs-number">1</span> / (<span class="hljs-number">1</span> + np.array(vector_distances))  <span class="hljs-comment"># 距离转相似度</span>
+
+        <span class="hljs-comment"># 4. 融合排序 (Reciprocal Rank Fusion)</span>
+        fused_scores = {}
+        <span class="hljs-keyword">for</span> i, doc_id <span class="hljs-keyword">in</span> enumerate(vector_ids):
+            fused_scores[doc_id] = self.vector_weight * vector_scores[i]
+
+        <span class="hljs-keyword">for</span> idx <span class="hljs-keyword">in</span> bm25_top_indices:
+            doc_id = self.doc_ids[idx]
+            <span class="hljs-keyword">if</span> doc_id <span class="hljs-keyword">in</span> fused_scores:
+                fused_scores[doc_id] += self.bm25_weight * bm25_scores[idx]
+            <span class="hljs-keyword">else</span>:
+                fused_scores[doc_id] = self.bm25_weight * bm25_scores[idx]
+
+        <span class="hljs-comment"># 5. 返回Top-K</span>
+        sorted_docs = sorted(fused_scores.items(), key=<span class="hljs-keyword">lambda</span> x: x[<span class="hljs-number">1</span>], reverse=<span class="hljs-literal">True</span>)[:top_k]
+        <span class="hljs-keyword">return</span> [doc_id <span class="hljs-keyword">for</span> doc_id, score <span class="hljs-keyword">in</span> sorted_docs]
+</div></code></pre>
+<p><strong>效果提升</strong>:</p>
+<ul>
+<li>🎯 精确匹配 + 语义理解</li>
+<li>📈 召回率提升 15-30%</li>
+</ul>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%984-%E7%BC%BA%E5%B0%91re-ranking%E9%87%8D%E6%8E%92%E5%BA%8F">❌ 问题4: 缺少Re-ranking(重排序)</h4>
+<p><strong>问题</strong>: 检索Top-K后直接使用,没有二次精排</p>
+<p><strong>业界方案: Cross-Encoder Re-ranking</strong></p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> sentence_transformers <span class="hljs-keyword">import</span> CrossEncoder
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RerankEngine</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-comment"># BGE Reranker: 专门用于排序的模型</span>
+        self.reranker = CrossEncoder(<span class="hljs-string">'BAAI/bge-reranker-large'</span>, max_length=<span class="hljs-number">512</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">rerank</span><span class="hljs-params">(self, query, candidates, top_k=<span class="hljs-number">3</span>)</span>:</span>
+        <span class="hljs-string">"""
+        对候选文档进行精排
+
+        Args:
+            query: 用户查询
+            candidates: [(doc_id, text), ...]
+            top_k: 返回Top-K
+        """</span>
+        <span class="hljs-comment"># 构造query-doc对</span>
+        pairs = [[query, doc_text] <span class="hljs-keyword">for</span> _, doc_text <span class="hljs-keyword">in</span> candidates]
+
+        <span class="hljs-comment"># 计算相关性分数</span>
+        scores = self.reranker.predict(pairs)
+
+        <span class="hljs-comment"># 排序</span>
+        sorted_indices = np.argsort(scores)[::<span class="hljs-number">-1</span>][:top_k]
+        <span class="hljs-keyword">return</span> [(candidates[i][<span class="hljs-number">0</span>], scores[i]) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> sorted_indices]
+</div></code></pre>
+<p><strong>完整流程</strong>:</p>
+<pre class="hljs"><code><div>向量检索(Top-20) → BM25(Top-20) → 融合(Top-10) → Re-ranking(Top-3) → LLM
+</div></code></pre>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%985-query%E6%94%B9%E5%86%99query-rewriting%E7%BC%BA%E5%A4%B1">❌ 问题5: Query改写(Query Rewriting)缺失</h4>
+<p><strong>问题</strong>: 用户的查询往往不精确</p>
+<p><strong>示例</strong>:</p>
+<ul>
+<li>用户输入: &quot;登录&quot;</li>
+<li>实际需求: &quot;用户登录功能的异常场景测试用例&quot;</li>
+</ul>
+<p><strong>解决方案: HyDE (Hypothetical Document Embeddings)</strong></p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HyDEQueryRewriter</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, llm_client)</span>:</span>
+        self.llm = llm_client
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">rewrite_query</span><span class="hljs-params">(self, user_query)</span>:</span>
+        <span class="hljs-string">"""
+        生成假设性文档,用假设文档做检索
+        """</span>
+        prompt = <span class="hljs-string">f"""
+        用户查询: <span class="hljs-subst">{user_query}</span>
+
+        请生成一段假设的技术文档摘要,这段摘要应该包含用户可能需要的信息。
+        要求:
+        1. 包含关键术语
+        2. 描述具体场景
+        3. 100-200字
+        """</span>
+
+        hypothetical_doc = self.llm.generate(prompt)
+        <span class="hljs-keyword">return</span> hypothetical_doc
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hyde_search</span><span class="hljs-params">(self, query, rag_engine, top_k=<span class="hljs-number">5</span>)</span>:</span>
+        <span class="hljs-string">"""使用HyDE改写后的查询进行检索"""</span>
+        <span class="hljs-comment"># 1. 生成假设文档</span>
+        hyde_query = self.rewrite_query(query)
+
+        <span class="hljs-comment"># 2. 用假设文档检索</span>
+        results = rag_engine.search(hyde_query, top_k=top_k)
+
+        <span class="hljs-keyword">return</span> results
+</div></code></pre>
+<p><strong>效果</strong>: 召回率提升 20-40% (特别是短查询)</p>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%986-%E5%85%83%E6%95%B0%E6%8D%AE%E5%88%A9%E7%94%A8%E4%B8%8D%E5%85%85%E5%88%86">❌ 问题6: 元数据利用不充分</h4>
+<p><strong>当前实现</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># rag_engine.py L155-163</span>
+metadatas.append({
+    <span class="hljs-string">"doc_id"</span>: file_doc_id,
+    <span class="hljs-string">"source"</span>: file_obj.name,
+    <span class="hljs-string">"summary"</span>: summary,
+    <span class="hljs-string">"type"</span>: <span class="hljs-string">"spec"</span>,  <span class="hljs-comment"># 只有这个字段用于过滤</span>
+    <span class="hljs-string">"date"</span>: current_time
+})
+</div></code></pre>
+<p><strong>问题</strong>: 元数据很丰富,但检索时没有利用!</p>
+<p><strong>优化方案: 元数据过滤检索</strong></p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MetadataAwareRAG</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">search_with_filter</span><span class="hljs-params">(self, query, filters=None, top_k=<span class="hljs-number">5</span>)</span>:</span>
+        <span class="hljs-string">"""
+        支持元数据过滤的检索
+
+        filters示例:
+        {
+            "type": "spec",  # 只检索技术规范
+            "date": {"$gte": "2024-01-01"},  # 只要2024年后的
+            "source": {"$contains": "安全"}  # 文件名包含"安全"
+        }
+        """</span>
+        <span class="hljs-keyword">return</span> self.knowledge_coll.query(
+            query_texts=[query],
+            where=filters,  <span class="hljs-comment"># ChromaDB原生支持!</span>
+            n_results=top_k
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">semantic_routing</span><span class="hljs-params">(self, query)</span>:</span>
+        <span class="hljs-string">"""
+        根据查询意图自动选择Collection
+        """</span>
+        <span class="hljs-comment"># 简单实现: 关键词匹配</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-string">"历史"</span> <span class="hljs-keyword">in</span> query <span class="hljs-keyword">or</span> <span class="hljs-string">"之前"</span> <span class="hljs-keyword">in</span> query <span class="hljs-keyword">or</span> <span class="hljs-string">"参考"</span> <span class="hljs-keyword">in</span> query:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"history"</span>
+        <span class="hljs-keyword">elif</span> <span class="hljs-string">"规范"</span> <span class="hljs-keyword">in</span> query <span class="hljs-keyword">or</span> <span class="hljs-string">"标准"</span> <span class="hljs-keyword">in</span> query <span class="hljs-keyword">or</span> <span class="hljs-string">"要求"</span> <span class="hljs-keyword">in</span> query:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"knowledge"</span>
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"both"</span>
+</div></code></pre>
+<p><strong>扩展元数据字段建议</strong>:</p>
+<pre class="hljs"><code><div>metadata = {
+    <span class="hljs-string">"doc_id"</span>: uuid,
+    <span class="hljs-string">"source"</span>: filename,
+    <span class="hljs-string">"summary"</span>: ai_summary,
+    <span class="hljs-string">"type"</span>: <span class="hljs-string">"spec"</span>,  <span class="hljs-comment"># spec/history/example</span>
+    <span class="hljs-string">"date"</span>: <span class="hljs-string">"2024-03-03"</span>,
+    <span class="hljs-string">"category"</span>: <span class="hljs-string">"security"</span>,  <span class="hljs-comment"># 业务分类: login/payment/security</span>
+    <span class="hljs-string">"priority"</span>: <span class="hljs-string">"P0"</span>,  <span class="hljs-comment"># 重要性</span>
+    <span class="hljs-string">"language"</span>: <span class="hljs-string">"zh-CN"</span>,
+    <span class="hljs-string">"version"</span>: <span class="hljs-string">"v1.0"</span>,
+    <span class="hljs-string">"tags"</span>: [<span class="hljs-string">"密码"</span>, <span class="hljs-string">"加密"</span>, <span class="hljs-string">"登录"</span>],  <span class="hljs-comment"># 标签</span>
+    <span class="hljs-string">"author"</span>: <span class="hljs-string">"user_123"</span>,
+    <span class="hljs-string">"chunk_index"</span>: <span class="hljs-number">0</span>,
+    <span class="hljs-string">"total_chunks"</span>: <span class="hljs-number">5</span>
+}
+</div></code></pre>
+<hr>
+<h3 id="12-%E5%BD%93%E5%89%8Dagent%E5%AE%9E%E7%8E%B0%E7%9A%84%E9%97%AE%E9%A2%98">1.2 当前Agent实现的问题</h3>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%981-%E4%B8%8D%E6%98%AF%E7%9C%9F%E6%AD%A3%E7%9A%84agent%E5%8F%AA%E6%98%AFprompt%E5%B7%A5%E7%A8%8B">❌ 问题1: 不是真正的Agent,只是Prompt工程</h4>
+<p><strong>现状</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># 本质上只是 LLM + Prompt模板</span>
+response = model.generate_content(prompt)
+</div></code></pre>
+<p><strong>真正的Agent应该包含</strong>:</p>
+<pre class="hljs"><code><div>Agent = LLM + Memory + Planning + Tools + Reflection
+</div></code></pre>
+<p><strong>对比表</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>当前实现</th>
+<th>标准Agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>推理能力</strong></td>
+<td>✅ 单轮推理</td>
+<td>✅ ReAct多轮推理</td>
+</tr>
+<tr>
+<td><strong>工具调用</strong></td>
+<td>❌ 无</td>
+<td>✅ Function Calling</td>
+</tr>
+<tr>
+<td><strong>记忆系统</strong></td>
+<td>⚠️ Session State</td>
+<td>✅ 长短期记忆</td>
+</tr>
+<tr>
+<td><strong>规划能力</strong></td>
+<td>❌ 无任务分解</td>
+<td>✅ Task Planning</td>
+</tr>
+<tr>
+<td><strong>反思能力</strong></td>
+<td>❌ 无</td>
+<td>✅ Self-Reflection</td>
+</tr>
+<tr>
+<td><strong>多Agent协作</strong></td>
+<td>⚠️ Generator+Critic</td>
+<td>✅ Multi-Agent协同</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%982-%E7%BC%BA%E5%B0%91%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E8%83%BD%E5%8A%9Btool-calling">❌ 问题2: 缺少工具调用能力(Tool Calling)</h4>
+<p><strong>问题</strong>: AI无法主动使用外部工具</p>
+<p><strong>应该支持的工具</strong>:</p>
+<ol>
+<li><strong>RAG检索工具</strong> - AI判断需要时主动调用</li>
+<li><strong>测试执行工具</strong> - 自动运行生成的用例</li>
+<li><strong>代码生成工具</strong> - 从JSON生成Pytest脚本</li>
+<li><strong>数据库查询工具</strong> - 查询历史数据</li>
+<li><strong>计算器工具</strong> - 边界值计算</li>
+</ol>
+<p><strong>标准实现: Function Calling</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment"># 1. 定义工具</span>
+tools = [
+    {
+        <span class="hljs-string">"name"</span>: <span class="hljs-string">"search_test_specs"</span>,
+        <span class="hljs-string">"description"</span>: <span class="hljs-string">"搜索测试规范文档,用于查找技术要求"</span>,
+        <span class="hljs-string">"parameters"</span>: {
+            <span class="hljs-string">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-string">"properties"</span>: {
+                <span class="hljs-string">"query"</span>: {<span class="hljs-string">"type"</span>: <span class="hljs-string">"string"</span>, <span class="hljs-string">"description"</span>: <span class="hljs-string">"搜索关键词"</span>},
+                <span class="hljs-string">"category"</span>: {<span class="hljs-string">"type"</span>: <span class="hljs-string">"string"</span>, <span class="hljs-string">"enum"</span>: [<span class="hljs-string">"security"</span>, <span class="hljs-string">"performance"</span>, <span class="hljs-string">"ui"</span>]}
+            },
+            <span class="hljs-string">"required"</span>: [<span class="hljs-string">"query"</span>]
+        }
+    },
+    {
+        <span class="hljs-string">"name"</span>: <span class="hljs-string">"calculate_boundary"</span>,
+        <span class="hljs-string">"description"</span>: <span class="hljs-string">"计算边界值测试点"</span>,
+        <span class="hljs-string">"parameters"</span>: {
+            <span class="hljs-string">"type"</span>: <span class="hljs-string">"object"</span>,
+            <span class="hljs-string">"properties"</span>: {
+                <span class="hljs-string">"min_value"</span>: {<span class="hljs-string">"type"</span>: <span class="hljs-string">"integer"</span>},
+                <span class="hljs-string">"max_value"</span>: {<span class="hljs-string">"type"</span>: <span class="hljs-string">"integer"</span>}
+            }
+        }
+    }
+]
+
+<span class="hljs-comment"># 2. LLM决策调用</span>
+<span class="hljs-keyword">from</span> google.generativeai.types <span class="hljs-keyword">import</span> FunctionDeclaration, Tool
+
+model = genai.GenerativeModel(
+    model_name=<span class="hljs-string">'gemini-1.5-pro'</span>,
+    tools=[Tool(function_declarations=[
+        FunctionDeclaration(
+            name=<span class="hljs-string">"search_test_specs"</span>,
+            description=<span class="hljs-string">"搜索测试规范"</span>,
+            parameters={...}
+        )
+    ])]
+)
+
+response = model.generate_content(<span class="hljs-string">"生成登录功能测试用例"</span>)
+
+<span class="hljs-comment"># 3. 检查是否需要调用工具</span>
+<span class="hljs-keyword">if</span> response.candidates[<span class="hljs-number">0</span>].content.parts[<span class="hljs-number">0</span>].function_call:
+    function_call = response.candidates[<span class="hljs-number">0</span>].content.parts[<span class="hljs-number">0</span>].function_call
+
+    <span class="hljs-comment"># 4. 执行工具</span>
+    <span class="hljs-keyword">if</span> function_call.name == <span class="hljs-string">"search_test_specs"</span>:
+        result = rag_engine.search(function_call.args[<span class="hljs-string">'query'</span>])
+
+        <span class="hljs-comment"># 5. 将结果返回给LLM</span>
+        response = model.generate_content([
+            user_prompt,
+            response.candidates[<span class="hljs-number">0</span>].content,  <span class="hljs-comment"># AI的工具调用请求</span>
+            genai.types.Content(
+                parts=[genai.types.Part(
+                    function_response=genai.types.FunctionResponse(
+                        name=<span class="hljs-string">"search_test_specs"</span>,
+                        response={<span class="hljs-string">"result"</span>: result}
+                    )
+                )]
+            )
+        ])
+</div></code></pre>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%983-%E7%BC%BA%E5%B0%91react%E6%8E%A8%E7%90%86%E5%BE%AA%E7%8E%AF">❌ 问题3: 缺少ReAct推理循环</h4>
+<p><strong>ReAct = Reasoning + Acting</strong></p>
+<p><strong>标准ReAct流程</strong>:</p>
+<pre class="hljs"><code><div>┌──────────────────────────────────────────────┐
+│  用户: &quot;生成支付功能的测试用例&quot;               │
+└───────────────┬──────────────────────────────┘
+                ▼
+        ┌───────────────┐
+        │  Thought 1:   │
+        │  我需要先了解 │
+        │  支付的技术规范│
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  Action 1:    │
+        │  search_specs(│
+        │   &quot;支付安全&quot;)  │
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  Observation: │
+        │  找到3条规范... │
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  Thought 2:   │
+        │  还需要参考   │
+        │  历史用例     │
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  Action 2:    │
+        │  search_history│
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  Observation: │
+        │  找到5个案例... │
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  Thought 3:   │
+        │  现在可以生成 │
+        └───────┬───────┘
+                ▼
+        ┌───────────────┐
+        │  Final Answer │
+        │  [JSON用例]   │
+        └───────────────┘
+</div></code></pre>
+<p><strong>实现代码</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ReActAgent</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, llm, tools)</span>:</span>
+        self.llm = llm
+        self.tools = {tool.name: tool <span class="hljs-keyword">for</span> tool <span class="hljs-keyword">in</span> tools}
+        self.max_iterations = <span class="hljs-number">5</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, user_input)</span>:</span>
+        <span class="hljs-string">"""ReAct主循环"""</span>
+        conversation_history = [user_input]
+
+        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(self.max_iterations):
+            <span class="hljs-comment"># 1. 思考(Thought)</span>
+            prompt = self._build_react_prompt(conversation_history)
+            response = self.llm.generate(prompt)
+
+            <span class="hljs-comment"># 2. 解析响应</span>
+            thought, action, action_input = self._parse_response(response)
+
+            print(<span class="hljs-string">f"💭 Thought <span class="hljs-subst">{i+<span class="hljs-number">1</span>}</span>: <span class="hljs-subst">{thought}</span>"</span>)
+
+            <span class="hljs-comment"># 3. 判断是否需要执行动作</span>
+            <span class="hljs-keyword">if</span> action == <span class="hljs-string">"Final Answer"</span>:
+                <span class="hljs-keyword">return</span> action_input  <span class="hljs-comment"># 完成!</span>
+
+            <span class="hljs-comment"># 4. 执行动作(Action)</span>
+            print(<span class="hljs-string">f"🔧 Action: <span class="hljs-subst">{action}</span>(<span class="hljs-subst">{action_input}</span>)"</span>)
+            observation = self._execute_tool(action, action_input)
+
+            <span class="hljs-comment"># 5. 记录观察(Observation)</span>
+            print(<span class="hljs-string">f"👁️ Observation: <span class="hljs-subst">{observation[:<span class="hljs-number">100</span>]}</span>..."</span>)
+            conversation_history.append({
+                <span class="hljs-string">"thought"</span>: thought,
+                <span class="hljs-string">"action"</span>: action,
+                <span class="hljs-string">"observation"</span>: observation
+            })
+
+        <span class="hljs-keyword">return</span> <span class="hljs-string">"达到最大迭代次数"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_build_react_prompt</span><span class="hljs-params">(self, history)</span>:</span>
+        <span class="hljs-string">"""构建ReAct格式的Prompt"""</span>
+        base_prompt = <span class="hljs-string">"""
+        你是一个遵循ReAct框架的测试专家Agent。
+
+        可用工具:
+        - search_specs(query): 搜索技术规范
+        - search_history(query): 搜索历史用例
+        - calculate_boundary(min, max): 计算边界值
+
+        回复格式:
+        Thought: [你的分析思路]
+        Action: [工具名称]
+        Action Input: [工具参数的JSON]
+
+        或者:
+        Thought: [最终分析]
+        Final Answer: [JSON格式的测试用例]
+
+        历史对话:
+        {history}
+
+        现在开始思考:
+        """</span>
+        <span class="hljs-keyword">return</span> base_prompt.format(history=json.dumps(history, ensure_ascii=<span class="hljs-literal">False</span>))
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_execute_tool</span><span class="hljs-params">(self, action, action_input)</span>:</span>
+        <span class="hljs-string">"""执行工具调用"""</span>
+        <span class="hljs-keyword">if</span> action <span class="hljs-keyword">in</span> self.tools:
+            <span class="hljs-keyword">return</span> self.tools[action].run(action_input)
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">f"错误: 工具 <span class="hljs-subst">{action}</span> 不存在"</span>
+</div></code></pre>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%984-%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F%E8%BF%87%E4%BA%8E%E7%AE%80%E5%8D%95">❌ 问题4: 记忆系统过于简单</h4>
+<p><strong>当前实现</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># ui/main.py L53</span>
+<span class="hljs-keyword">if</span> <span class="hljs-string">'gemini_history'</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> st.session_state:
+    st.session_state[<span class="hljs-string">'gemini_history'</span>] = []
+</div></code></pre>
+<p><strong>问题</strong>:</p>
+<ul>
+<li>只有短期对话历史</li>
+<li>无结构化记忆</li>
+<li>跨会话信息丢失</li>
+</ul>
+<p><strong>标准记忆系统架构</strong>:</p>
+<pre class="hljs"><code><div>┌────────────────────────────────────────────┐
+│           Memory System                    │
+├────────────────────────────────────────────┤
+│                                            │
+│  ┌──────────────────────────────────┐     │
+│  │   Working Memory (工作记忆)      │     │
+│  │   - 当前会话上下文               │     │
+│  │   - 最近3轮对话                  │     │
+│  └──────────────────────────────────┘     │
+│                                            │
+│  ┌──────────────────────────────────┐     │
+│  │   Short-term Memory (短期记忆)   │     │
+│  │   - 本次会话的完整历史           │     │
+│  │   - 已生成的测试用例             │     │
+│  └──────────────────────────────────┘     │
+│                                            │
+│  ┌──────────────────────────────────┐     │
+│  │   Long-term Memory (长期记忆)    │     │
+│  │   - 用户偏好(如常用P0优先级)      │     │
+│  │   - 历史项目经验                 │     │
+│  │   - 知识图谱                     │     │
+│  └──────────────────────────────────┘     │
+│                                            │
+│  ┌──────────────────────────────────┐     │
+│  │   Episodic Memory (情景记忆)     │     │
+│  │   - 上次讨论的登录功能           │     │
+│  │   - 两周前修复的Bug              │     │
+│  └──────────────────────────────────┘     │
+└────────────────────────────────────────────┘
+</div></code></pre>
+<p><strong>实现代码</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> datetime <span class="hljs-keyword">import</span> datetime, timedelta
+<span class="hljs-keyword">import</span> json
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MemorySystem</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, vector_db, user_id)</span>:</span>
+        self.vector_db = vector_db
+        self.user_id = user_id
+
+        <span class="hljs-comment"># 工作记忆: 最近N轮对话</span>
+        self.working_memory = []
+        self.working_memory_size = <span class="hljs-number">3</span>
+
+        <span class="hljs-comment"># 短期记忆: 当前会话</span>
+        self.short_term_memory = []
+
+        <span class="hljs-comment"># 长期记忆: 持久化存储</span>
+        self.long_term_collection = vector_db.get_or_create_collection(
+            <span class="hljs-string">f"longterm_memory_<span class="hljs-subst">{user_id}</span>"</span>
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">add_interaction</span><span class="hljs-params">(self, user_input, ai_response, metadata=None)</span>:</span>
+        <span class="hljs-string">"""记录一次交互"""</span>
+        interaction = {
+            <span class="hljs-string">"timestamp"</span>: datetime.now().isoformat(),
+            <span class="hljs-string">"user"</span>: user_input,
+            <span class="hljs-string">"assistant"</span>: ai_response,
+            <span class="hljs-string">"metadata"</span>: metadata <span class="hljs-keyword">or</span> {}
+        }
+
+        <span class="hljs-comment"># 更新工作记忆(FIFO)</span>
+        self.working_memory.append(interaction)
+        <span class="hljs-keyword">if</span> len(self.working_memory) &gt; self.working_memory_size:
+            self.working_memory.pop(<span class="hljs-number">0</span>)
+
+        <span class="hljs-comment"># 更新短期记忆</span>
+        self.short_term_memory.append(interaction)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_working_context</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""获取工作记忆上下文"""</span>
+        <span class="hljs-keyword">return</span> self.working_memory
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">save_to_longterm</span><span class="hljs-params">(self, key_points)</span>:</span>
+        <span class="hljs-string">"""将重要信息保存到长期记忆"""</span>
+        self.long_term_collection.add(
+            documents=[key_points],
+            metadatas=[{
+                <span class="hljs-string">"type"</span>: <span class="hljs-string">"user_preference"</span>,
+                <span class="hljs-string">"user_id"</span>: self.user_id,
+                <span class="hljs-string">"date"</span>: datetime.now().isoformat()
+            }],
+            ids=[str(uuid.uuid4())]
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">recall_similar_experience</span><span class="hljs-params">(self, query)</span>:</span>
+        <span class="hljs-string">"""从长期记忆召回相似经验"""</span>
+        results = self.long_term_collection.query(
+            query_texts=[query],
+            n_results=<span class="hljs-number">3</span>
+        )
+        <span class="hljs-keyword">return</span> results[<span class="hljs-string">'documents'</span>][<span class="hljs-number">0</span>] <span class="hljs-keyword">if</span> results[<span class="hljs-string">'documents'</span>] <span class="hljs-keyword">else</span> []
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">extract_user_preferences</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-string">"""分析用户偏好"""</span>
+        <span class="hljs-comment"># 分析历史交互,提取偏好</span>
+        all_data = self.long_term_collection.get()
+
+        preferences = {
+            <span class="hljs-string">"preferred_priority"</span>: <span class="hljs-string">"P0"</span>,  <span class="hljs-comment"># 从历史中统计</span>
+            <span class="hljs-string">"preferred_strategy"</span>: <span class="hljs-string">"边界值分析"</span>,
+            <span class="hljs-string">"common_modules"</span>: [<span class="hljs-string">"登录"</span>, <span class="hljs-string">"支付"</span>],
+            <span class="hljs-string">"language_style"</span>: <span class="hljs-string">"简洁"</span>
+        }
+        <span class="hljs-keyword">return</span> preferences
+</div></code></pre>
+<hr>
+<h4 id="%E2%9D%8C-%E9%97%AE%E9%A2%985-%E5%A4%9Aagent%E5%8D%8F%E4%BD%9C%E4%B8%8D%E8%B6%B3">❌ 问题5: 多Agent协作不足</h4>
+<p><strong>当前实现</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># Generator和Critic是分离的</span>
+<span class="hljs-comment"># 1. Generator生成</span>
+response = llm_client.generate(prompt)
+
+<span class="hljs-comment"># 2. 手动点击"评估"按钮</span>
+<span class="hljs-keyword">if</span> st.button(<span class="hljs-string">"评估"</span>):
+    report = evaluator.evaluate(response)
+</div></code></pre>
+<p><strong>问题</strong>:</p>
+<ul>
+<li>串行执行,效率低</li>
+<li>无自动协同</li>
+</ul>
+<p><strong>标准Multi-Agent架构</strong>:</p>
+<pre class="hljs"><code><div>┌─────────────────────────────────────────────────┐
+│            Agent Orchestrator (编排器)          │
+│  (任务分解、Agent调度、结果聚合)                 │
+└────────────┬────────────────────────────────────┘
+             │
+     ┌───────┼───────┬────────┬────────┐
+     ▼       ▼       ▼        ▼        ▼
+┌─────────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐
+│Generator│ │Critic││Refiner││Executor││Analyzer│
+│  Agent  │ │Agent ││ Agent││ Agent ││ Agent  │
+└─────────┘ └────┘ └────┘ └────┘ └────┘
+     │         │       │       │       │
+     │         │       │       │       │
+     └────────┬┴───────┴───────┴───────┘
+              │
+        [消息总线/共享内存]
+</div></code></pre>
+<p><strong>实现: LangGraph多Agent系统</strong></p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> langgraph.graph <span class="hljs-keyword">import</span> StateGraph, END
+<span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> TypedDict, List
+
+<span class="hljs-comment"># 1. 定义状态</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AgentState</span><span class="hljs-params">(TypedDict)</span>:</span>
+    prd_text: str
+    rag_context: str
+    generated_cases: List[dict]
+    evaluation_report: dict
+    refinement_suggestions: List[str]
+    current_iteration: int
+    max_iterations: int
+
+<span class="hljs-comment"># 2. 定义Agents</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GeneratorAgent</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, state: AgentState)</span>:</span>
+        <span class="hljs-string">"""生成测试用例"""</span>
+        cases = llm_generate(state[<span class="hljs-string">'prd_text'</span>], state[<span class="hljs-string">'rag_context'</span>])
+        <span class="hljs-keyword">return</span> {<span class="hljs-string">"generated_cases"</span>: cases}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CriticAgent</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, state: AgentState)</span>:</span>
+        <span class="hljs-string">"""评估用例质量"""</span>
+        report = evaluate(state[<span class="hljs-string">'generated_cases'</span>], state[<span class="hljs-string">'prd_text'</span>])
+        <span class="hljs-keyword">return</span> {<span class="hljs-string">"evaluation_report"</span>: report}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RefinerAgent</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, state: AgentState)</span>:</span>
+        <span class="hljs-string">"""优化用例"""</span>
+        <span class="hljs-keyword">if</span> state[<span class="hljs-string">'evaluation_report'</span>][<span class="hljs-string">'score'</span>] &lt; <span class="hljs-number">85</span>:
+            refined_cases = refine(
+                state[<span class="hljs-string">'generated_cases'</span>],
+                state[<span class="hljs-string">'evaluation_report'</span>][<span class="hljs-string">'suggestions'</span>]
+            )
+            <span class="hljs-keyword">return</span> {<span class="hljs-string">"generated_cases"</span>: refined_cases}
+        <span class="hljs-keyword">return</span> {}
+
+<span class="hljs-comment"># 3. 构建流程图</span>
+workflow = StateGraph(AgentState)
+
+<span class="hljs-comment"># 添加节点</span>
+workflow.add_node(<span class="hljs-string">"generate"</span>, GeneratorAgent().run)
+workflow.add_node(<span class="hljs-string">"critic"</span>, CriticAgent().run)
+workflow.add_node(<span class="hljs-string">"refine"</span>, RefinerAgent().run)
+
+<span class="hljs-comment"># 添加边</span>
+workflow.add_edge(<span class="hljs-string">"generate"</span>, <span class="hljs-string">"critic"</span>)
+
+<span class="hljs-comment"># 条件边: 根据评分决定是否需要优化</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">should_refine</span><span class="hljs-params">(state)</span>:</span>
+    <span class="hljs-keyword">if</span> state[<span class="hljs-string">'evaluation_report'</span>][<span class="hljs-string">'score'</span>] &lt; <span class="hljs-number">85</span> <span class="hljs-keyword">and</span> state[<span class="hljs-string">'current_iteration'</span>] &lt; state[<span class="hljs-string">'max_iterations'</span>]:
+        <span class="hljs-keyword">return</span> <span class="hljs-string">"refine"</span>
+    <span class="hljs-keyword">return</span> END
+
+workflow.add_conditional_edges(<span class="hljs-string">"critic"</span>, should_refine, {
+    <span class="hljs-string">"refine"</span>: <span class="hljs-string">"refine"</span>,
+    END: END
+})
+workflow.add_edge(<span class="hljs-string">"refine"</span>, <span class="hljs-string">"generate"</span>)  <span class="hljs-comment"># 优化后重新生成</span>
+
+<span class="hljs-comment"># 设置入口</span>
+workflow.set_entry_point(<span class="hljs-string">"generate"</span>)
+
+<span class="hljs-comment"># 4. 编译并运行</span>
+app = workflow.compile()
+
+<span class="hljs-comment"># 执行</span>
+final_state = app.invoke({
+    <span class="hljs-string">"prd_text"</span>: <span class="hljs-string">"..."</span>,
+    <span class="hljs-string">"rag_context"</span>: <span class="hljs-string">"..."</span>,
+    <span class="hljs-string">"current_iteration"</span>: <span class="hljs-number">0</span>,
+    <span class="hljs-string">"max_iterations"</span>: <span class="hljs-number">3</span>
+})
+
+print(<span class="hljs-string">f"最终用例: <span class="hljs-subst">{final_state[<span class="hljs-string">'generated_cases'</span>]}</span>"</span>)
+print(<span class="hljs-string">f"质量评分: <span class="hljs-subst">{final_state[<span class="hljs-string">'evaluation_report'</span>][<span class="hljs-string">'score'</span>]}</span>"</span>)
+</div></code></pre>
+<p><strong>优势</strong>:</p>
+<ul>
+<li>✅ 自动化闭环优化</li>
+<li>✅ 并行执行多个Agent</li>
+<li>✅ 清晰的流程可视化</li>
+<li>✅ 易于扩展新Agent</li>
+</ul>
+<hr>
+<h2 id="%E4%BA%8Crag%E7%B3%BB%E7%BB%9F%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%8C%96">二、RAG系统深度优化</h2>
+<h3 id="21-%E8%AF%AD%E4%B9%89%E5%88%86%E5%9D%97semantic-chunking">2.1 语义分块(Semantic Chunking)</h3>
+<p><strong>目标</strong>: 按照语义单元切分,而非固定字符数</p>
+<p><strong>实现方案</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> langchain_experimental.text_splitter <span class="hljs-keyword">import</span> SemanticChunker
+<span class="hljs-keyword">from</span> langchain_openai.embeddings <span class="hljs-keyword">import</span> OpenAIEmbeddings
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SemanticTextSplitter</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, embedding_model)</span>:</span>
+        self.splitter = SemanticChunker(
+            embeddings=embedding_model,
+            breakpoint_threshold_type=<span class="hljs-string">"percentile"</span>  <span class="hljs-comment"># 语义突变点检测</span>
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">split</span><span class="hljs-params">(self, text)</span>:</span>
+        <span class="hljs-string">"""
+        在语义边界处切分
+
+        原理: 计算相邻句子的Embedding相似度,在相似度突降处切分
+        """</span>
+        chunks = self.splitter.split_text(text)
+        <span class="hljs-keyword">return</span> chunks
+</div></code></pre>
+<p><strong>对比效果</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>固定窗口切分</th>
+<th>语义切分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&quot;登录密码必须包含...\n\n第二节 支付功能...&quot;</td>
+<td>❌ 可能在两节之间切断</td>
+<td>✅ 在章节边界切分</td>
+</tr>
+<tr>
+<td>表格内容</td>
+<td>❌ 表格被破坏</td>
+<td>✅ 完整保留</td>
+</tr>
+<tr>
+<td>检索准确率</td>
+<td>60%</td>
+<td>85%</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="22-graphrag-%E7%9F%A5%E8%AF%86%E5%9B%BE%E8%B0%B1%E5%A2%9E%E5%BC%BA">2.2 GraphRAG: 知识图谱增强</h3>
+<p><strong>问题</strong>: 传统RAG只有&quot;文档→向量&quot;的映射,丢失了实体关系</p>
+<p><strong>GraphRAG方案</strong>:</p>
+<pre class="hljs"><code><div>文档: &quot;登录功能依赖于用户表和会话管理模块&quot;
+
+传统RAG:
+[文档] → [向量] → 检索
+
+GraphRAG:
+[文档] → 提取实体和关系 → 构建知识图谱
+         ↓
+    (登录功能) --依赖于--&gt; (用户表)
+         |
+         +-------依赖于------&gt; (会话管理)
+
+检索时: 不仅返回文档,还返回关联的实体和关系
+</div></code></pre>
+<p><strong>实现</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> langchain_community.graphs <span class="hljs-keyword">import</span> Neo4jGraph
+<span class="hljs-keyword">from</span> langchain.chains <span class="hljs-keyword">import</span> GraphCypherQAChain
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GraphRAGEngine</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, neo4j_uri, username, password)</span>:</span>
+        self.graph = Neo4jGraph(
+            url=neo4j_uri,
+            username=username,
+            password=password
+        )
+        self.llm = get_llm()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">build_graph_from_documents</span><span class="hljs-params">(self, documents)</span>:</span>
+        <span class="hljs-string">"""从文档构建知识图谱"""</span>
+        <span class="hljs-keyword">for</span> doc <span class="hljs-keyword">in</span> documents:
+            <span class="hljs-comment"># 1. 提取实体</span>
+            entities = self._extract_entities(doc)
+
+            <span class="hljs-comment"># 2. 提取关系</span>
+            relations = self._extract_relations(doc, entities)
+
+            <span class="hljs-comment"># 3. 写入Neo4j</span>
+            <span class="hljs-keyword">for</span> entity <span class="hljs-keyword">in</span> entities:
+                self.graph.query(<span class="hljs-string">f"""
+                    MERGE (n:<span class="hljs-subst">{entity[<span class="hljs-string">'type'</span>]}</span> {{name: '<span class="hljs-subst">{entity[<span class="hljs-string">'name'</span>]}</span>'}})
+                    SET n.description = '<span class="hljs-subst">{entity[<span class="hljs-string">'description'</span>]}</span>'
+                """</span>)
+
+            <span class="hljs-keyword">for</span> rel <span class="hljs-keyword">in</span> relations:
+                self.graph.query(<span class="hljs-string">f"""
+                    MATCH (a:<span class="hljs-subst">{rel[<span class="hljs-string">'from_type'</span>]}</span> {{name: '<span class="hljs-subst">{rel[<span class="hljs-string">'from'</span>]}</span>'}})
+                    MATCH (b:<span class="hljs-subst">{rel[<span class="hljs-string">'to_type'</span>]}</span> {{name: '<span class="hljs-subst">{rel[<span class="hljs-string">'to'</span>]}</span>'}})
+                    MERGE (a)-[:<span class="hljs-subst">{rel[<span class="hljs-string">'relation'</span>]}</span>]-&gt;(b)
+                """</span>)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">graph_rag_search</span><span class="hljs-params">(self, query)</span>:</span>
+        <span class="hljs-string">"""基于图谱的检索"""</span>
+        <span class="hljs-comment"># 使用Cypher查询语言</span>
+        chain = GraphCypherQAChain.from_llm(
+            self.llm,
+            graph=self.graph,
+            verbose=<span class="hljs-literal">True</span>
+        )
+
+        result = chain.run(query)
+        <span class="hljs-keyword">return</span> result
+</div></code></pre>
+<p><strong>应用场景</strong>:</p>
+<ul>
+<li>🔗 &quot;登录功能相关的所有测试规范&quot; → 自动找到用户表、会话管理等依赖模块的规范</li>
+<li>📊 &quot;最近修改过哪些与支付相关的用例&quot; → 图谱跟踪关联关系</li>
+</ul>
+<hr>
+<h3 id="23-%E5%A4%9A%E8%B7%AF%E5%8F%AC%E5%9B%9Emulti-recall">2.3 多路召回(Multi-Recall)</h3>
+<p><strong>策略</strong>: 从不同角度召回,再融合</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MultiRecallRAG</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">multi_recall</span><span class="hljs-params">(self, query, prd_context)</span>:</span>
+        <span class="hljs-string">"""
+        多路召回策略
+        """</span>
+        results = []
+
+        <span class="hljs-comment"># 1. 直接查询召回</span>
+        r1 = self.vector_search(query)
+        results.extend(r1)
+
+        <span class="hljs-comment"># 2. Query改写召回 (同义词扩展)</span>
+        expanded_queries = self.expand_query(query)  <span class="hljs-comment"># ["登录", "用户认证", "身份验证"]</span>
+        <span class="hljs-keyword">for</span> eq <span class="hljs-keyword">in</span> expanded_queries:
+            r2 = self.vector_search(eq)
+            results.extend(r2)
+
+        <span class="hljs-comment"># 3. PRD关键词召回</span>
+        prd_keywords = self.extract_keywords(prd_context)
+        <span class="hljs-keyword">for</span> keyword <span class="hljs-keyword">in</span> prd_keywords:
+            r3 = self.vector_search(keyword)
+            results.extend(r3)
+
+        <span class="hljs-comment"># 4. 去重 + 重排序</span>
+        unique_results = self.deduplicate(results)
+        ranked_results = self.rerank(query, unique_results)
+
+        <span class="hljs-keyword">return</span> ranked_results[:<span class="hljs-number">5</span>]
+</div></code></pre>
+<hr>
+<h3 id="24-rag%E8%AF%84%E4%BC%B0%E4%BD%93%E7%B3%BB">2.4 RAG评估体系</h3>
+<p><strong>问题</strong>: 不知道RAG效果好坏</p>
+<p><strong>解决方案: RAGAS框架</strong></p>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> ragas <span class="hljs-keyword">import</span> evaluate
+<span class="hljs-keyword">from</span> ragas.metrics <span class="hljs-keyword">import</span> (
+    faithfulness,        <span class="hljs-comment"># 忠实度: 生成内容是否基于检索结果</span>
+    answer_relevancy,    <span class="hljs-comment"># 答案相关性</span>
+    context_relevancy,   <span class="hljs-comment"># 上下文相关性</span>
+    context_recall       <span class="hljs-comment"># 召回率</span>
+)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">evaluate_rag_system</span><span class="hljs-params">(test_cases)</span>:</span>
+    <span class="hljs-string">"""
+    评估RAG系统
+
+    test_cases格式:
+    [
+        {
+            "question": "登录功能的安全规范",
+            "ground_truth": "密码必须8位以上...",  # 标准答案
+            "contexts": [...],  # RAG检索到的片段
+            "answer": "..."  # AI生成的答案
+        }
+    ]
+    """</span>
+    results = evaluate(
+        test_cases,
+        metrics=[
+            faithfulness,
+            answer_relevancy,
+            context_relevancy,
+            context_recall
+        ]
+    )
+
+    print(<span class="hljs-string">f"忠实度: <span class="hljs-subst">{results[<span class="hljs-string">'faithfulness'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"答案相关性: <span class="hljs-subst">{results[<span class="hljs-string">'answer_relevancy'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"上下文相关性: <span class="hljs-subst">{results[<span class="hljs-string">'context_relevancy'</span>]}</span>"</span>)
+    print(<span class="hljs-string">f"召回率: <span class="hljs-subst">{results[<span class="hljs-string">'context_recall'</span>]}</span>"</span>)
+
+    <span class="hljs-keyword">return</span> results
+</div></code></pre>
+<p><strong>持续优化</strong>:</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># A/B测试不同的RAG配置</span>
+configs = [
+    {<span class="hljs-string">"chunk_size"</span>: <span class="hljs-number">500</span>, <span class="hljs-string">"overlap"</span>: <span class="hljs-number">100</span>, <span class="hljs-string">"top_k"</span>: <span class="hljs-number">3</span>},
+    {<span class="hljs-string">"chunk_size"</span>: <span class="hljs-number">1000</span>, <span class="hljs-string">"overlap"</span>: <span class="hljs-number">200</span>, <span class="hljs-string">"top_k"</span>: <span class="hljs-number">5</span>},
+    {<span class="hljs-string">"chunk_size"</span>: <span class="hljs-number">800</span>, <span class="hljs-string">"overlap"</span>: <span class="hljs-number">150</span>, <span class="hljs-string">"top_k"</span>: <span class="hljs-number">4</span>}
+]
+
+best_config = <span class="hljs-literal">None</span>
+best_score = <span class="hljs-number">0</span>
+
+<span class="hljs-keyword">for</span> config <span class="hljs-keyword">in</span> configs:
+    rag_engine = RAGEngine(**config)
+    score = evaluate_rag_system(test_cases)
+    <span class="hljs-keyword">if</span> score[<span class="hljs-string">'faithfulness'</span>] &gt; best_score:
+        best_score = score[<span class="hljs-string">'faithfulness'</span>]
+        best_config = config
+
+print(<span class="hljs-string">f"最佳配置: <span class="hljs-subst">{best_config}</span>"</span>)
+</div></code></pre>
+<hr>
+<h2 id="%E4%B8%89agent%E6%9E%B6%E6%9E%84%E5%8D%87%E7%BA%A7">三、Agent架构升级</h2>
+<h3 id="31-%E5%AE%8C%E6%95%B4%E7%9A%84react-agent%E5%AE%9E%E7%8E%B0">3.1 完整的ReAct Agent实现</h3>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TestCaseGeneratorAgent</span>:</span>
+    <span class="hljs-string">"""
+    完整的测试用例生成Agent
+    支持: ReAct推理、工具调用、记忆系统、反思
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, llm, tools, memory_system)</span>:</span>
+        self.llm = llm
+        self.tools = {tool.name: tool <span class="hljs-keyword">for</span> tool <span class="hljs-keyword">in</span> tools}
+        self.memory = memory_system
+        self.max_iterations = <span class="hljs-number">10</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, user_request, prd_files=None)</span>:</span>
+        <span class="hljs-string">"""
+        主执行流程
+        """</span>
+        <span class="hljs-comment"># 1. 初始化状态</span>
+        state = {
+            <span class="hljs-string">"user_request"</span>: user_request,
+            <span class="hljs-string">"prd_files"</span>: prd_files,
+            <span class="hljs-string">"iteration"</span>: <span class="hljs-number">0</span>,
+            <span class="hljs-string">"thought_chain"</span>: [],
+            <span class="hljs-string">"tool_results"</span>: [],
+            <span class="hljs-string">"draft_cases"</span>: <span class="hljs-literal">None</span>,
+            <span class="hljs-string">"final_cases"</span>: <span class="hljs-literal">None</span>
+        }
+
+        <span class="hljs-comment"># 2. ReAct循环</span>
+        <span class="hljs-keyword">while</span> state[<span class="hljs-string">'iteration'</span>] &lt; self.max_iterations:
+            <span class="hljs-comment"># 2.1 思考(Reasoning)</span>
+            thought, action, action_input = self._reason(state)
+            state[<span class="hljs-string">'thought_chain'</span>].append(thought)
+
+            print(<span class="hljs-string">f"\n💭 Iteration <span class="hljs-subst">{state[<span class="hljs-string">'iteration'</span>]+<span class="hljs-number">1</span>}</span>"</span>)
+            print(<span class="hljs-string">f"Thought: <span class="hljs-subst">{thought}</span>"</span>)
+            print(<span class="hljs-string">f"Action: <span class="hljs-subst">{action}</span>(<span class="hljs-subst">{action_input}</span>)"</span>)
+
+            <span class="hljs-comment"># 2.2 判断是否结束</span>
+            <span class="hljs-keyword">if</span> action == <span class="hljs-string">"SubmitFinalAnswer"</span>:
+                state[<span class="hljs-string">'final_cases'</span>] = action_input
+                <span class="hljs-keyword">break</span>
+
+            <span class="hljs-comment"># 2.3 执行动作(Acting)</span>
+            observation = self._act(action, action_input)
+            state[<span class="hljs-string">'tool_results'</span>].append({
+                <span class="hljs-string">"action"</span>: action,
+                <span class="hljs-string">"input"</span>: action_input,
+                <span class="hljs-string">"output"</span>: observation
+            })
+
+            print(<span class="hljs-string">f"Observation: <span class="hljs-subst">{observation[:<span class="hljs-number">200</span>]}</span>..."</span>)
+
+            <span class="hljs-comment"># 2.4 反思(Reflection)</span>
+            <span class="hljs-keyword">if</span> state[<span class="hljs-string">'iteration'</span>] % <span class="hljs-number">3</span> == <span class="hljs-number">0</span>:  <span class="hljs-comment"># 每3轮反思一次</span>
+                reflection = self._reflect(state)
+                print(<span class="hljs-string">f"🔍 Reflection: <span class="hljs-subst">{reflection}</span>"</span>)
+                state[<span class="hljs-string">'thought_chain'</span>].append(<span class="hljs-string">f"[Reflection] <span class="hljs-subst">{reflection}</span>"</span>)
+
+            state[<span class="hljs-string">'iteration'</span>] += <span class="hljs-number">1</span>
+
+        <span class="hljs-comment"># 3. 保存到记忆</span>
+        self.memory.save_episode(state)
+
+        <span class="hljs-keyword">return</span> state[<span class="hljs-string">'final_cases'</span>]
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_reason</span><span class="hljs-params">(self, state)</span>:</span>
+        <span class="hljs-string">"""推理: 根据当前状态决定下一步动作"""</span>
+        prompt = <span class="hljs-string">f"""
+        你是一个测试用例生成专家Agent。
+
+        【当前任务】
+        用户请求: <span class="hljs-subst">{state[<span class="hljs-string">'user_request'</span>]}</span>
+
+        【你的思考历史】
+        <span class="hljs-subst">{chr(<span class="hljs-number">10</span>).join(state[<span class="hljs-string">'thought_chain'</span>][<span class="hljs-number">-3</span>:])}</span>  # 最近3条
+
+        【工具执行结果】
+        <span class="hljs-subst">{json.dumps(state[<span class="hljs-string">'tool_results'</span>][<span class="hljs-number">-2</span>:], ensure_ascii=<span class="hljs-literal">False</span>)}</span>  # 最近2条
+
+        【可用工具】
+        1. search_tech_specs(query: str) - 搜索技术规范
+        2. search_history_cases(query: str) - 搜索历史用例
+        3. analyze_prd(prd_text: str) - 分析PRD文档
+        4. calculate_boundary(min: int, max: int) - 计算边界值
+        5. generate_draft_cases(context: dict) - 生成草稿用例
+        6. evaluate_cases(cases: list) - 评估用例质量
+        7. refine_cases(cases: list, feedback: str) - 优化用例
+        8. SubmitFinalAnswer(cases: list) - 提交最终答案
+
+        【要求】
+        请严格按照以下格式回复:
+        Thought: [你的分析思路,100字以内]
+        Action: [工具名称]
+        Action Input: [JSON格式的参数]
+
+        现在开始思考:
+        """</span>
+
+        response = self.llm.generate(prompt)
+
+        <span class="hljs-comment"># 解析响应</span>
+        thought = self._extract_field(response, <span class="hljs-string">"Thought"</span>)
+        action = self._extract_field(response, <span class="hljs-string">"Action"</span>)
+        action_input = self._extract_field(response, <span class="hljs-string">"Action Input"</span>)
+
+        <span class="hljs-keyword">return</span> thought, action, json.loads(action_input)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_act</span><span class="hljs-params">(self, action, action_input)</span>:</span>
+        <span class="hljs-string">"""执行动作"""</span>
+        <span class="hljs-keyword">if</span> action <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> self.tools:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">f"错误: 工具 <span class="hljs-subst">{action}</span> 不存在"</span>
+
+        tool = self.tools[action]
+        result = tool.run(action_input)
+        <span class="hljs-keyword">return</span> result
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_reflect</span><span class="hljs-params">(self, state)</span>:</span>
+        <span class="hljs-string">"""反思: 分析当前策略是否有效"""</span>
+        prompt = <span class="hljs-string">f"""
+        你已经执行了 <span class="hljs-subst">{state[<span class="hljs-string">'iteration'</span>]}</span> 轮迭代。
+
+        请反思:
+        1. 当前策略是否有效?
+        2. 是否陷入了循环?
+        3. 下一步应该调整什么?
+
+        思考历史:
+        <span class="hljs-subst">{chr(<span class="hljs-number">10</span>).join(state[<span class="hljs-string">'thought_chain'</span>])}</span>
+
+        一句话回答:
+        """</span>
+        reflection = self.llm.generate(prompt)
+        <span class="hljs-keyword">return</span> reflection
+</div></code></pre>
+<hr>
+<h3 id="32-%E5%B7%A5%E5%85%B7%E5%BA%93%E8%AE%BE%E8%AE%A1">3.2 工具库设计</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> abc <span class="hljs-keyword">import</span> ABC, abstractmethod
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseTool</span><span class="hljs-params">(ABC)</span>:</span>
+    <span class="hljs-string">"""工具基类"""</span>
+
+<span class="hljs-meta">    @property</span>
+<span class="hljs-meta">    @abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">name</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-keyword">pass</span>
+
+<span class="hljs-meta">    @property</span>
+<span class="hljs-meta">    @abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">description</span><span class="hljs-params">(self)</span> -&gt; str:</span>
+        <span class="hljs-keyword">pass</span>
+
+<span class="hljs-meta">    @abstractmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, input_data)</span>:</span>
+        <span class="hljs-keyword">pass</span>
+
+<span class="hljs-comment"># === 具体工具实现 ===</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SearchTechSpecsTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name = <span class="hljs-string">"search_tech_specs"</span>
+    description = <span class="hljs-string">"搜索技术规范文档"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, rag_engine)</span>:</span>
+        self.rag = rag_engine
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, input_data)</span>:</span>
+        query = input_data[<span class="hljs-string">'query'</span>]
+        results = self.rag.hybrid_search(query, collection=<span class="hljs-string">"knowledge"</span>, top_k=<span class="hljs-number">3</span>)
+        <span class="hljs-keyword">return</span> results
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CalculateBoundaryTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name = <span class="hljs-string">"calculate_boundary"</span>
+    description = <span class="hljs-string">"计算边界值测试点"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, input_data)</span>:</span>
+        min_val = input_data[<span class="hljs-string">'min'</span>]
+        max_val = input_data[<span class="hljs-string">'max'</span>]
+
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">"below_min"</span>: min_val - <span class="hljs-number">1</span>,
+            <span class="hljs-string">"min"</span>: min_val,
+            <span class="hljs-string">"min_plus_one"</span>: min_val + <span class="hljs-number">1</span>,
+            <span class="hljs-string">"normal"</span>: (min_val + max_val) // <span class="hljs-number">2</span>,
+            <span class="hljs-string">"max_minus_one"</span>: max_val - <span class="hljs-number">1</span>,
+            <span class="hljs-string">"max"</span>: max_val,
+            <span class="hljs-string">"above_max"</span>: max_val + <span class="hljs-number">1</span>
+        }
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GeneratePytestScriptTool</span><span class="hljs-params">(BaseTool)</span>:</span>
+    name = <span class="hljs-string">"generate_pytest_script"</span>
+    description = <span class="hljs-string">"从测试用例JSON生成Pytest执行脚本"</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, input_data)</span>:</span>
+        cases = input_data[<span class="hljs-string">'cases'</span>]
+
+        script = <span class="hljs-string">"import pytest\n\n"</span>
+        <span class="hljs-keyword">for</span> case <span class="hljs-keyword">in</span> cases:
+            func_name = <span class="hljs-string">f"test_<span class="hljs-subst">{case[<span class="hljs-string">'id'</span>].lower()}</span>"</span>
+            script += <span class="hljs-string">f"def <span class="hljs-subst">{func_name}</span>():\n"</span>
+            script += <span class="hljs-string">f"    '''<span class="hljs-subst">{case[<span class="hljs-string">'step'</span>]}</span>'''\n"</span>
+            script += <span class="hljs-string">f"    # TODO: 实现测试逻辑\n"</span>
+            script += <span class="hljs-string">f"    assert True, '<span class="hljs-subst">{case[<span class="hljs-string">'expected'</span>]}</span>'\n\n"</span>
+
+        <span class="hljs-keyword">return</span> script
+</div></code></pre>
+<hr>
+<h3 id="33-%E5%A4%9Aagent%E5%8D%8F%E5%90%8C%E7%B3%BB%E7%BB%9F">3.3 多Agent协同系统</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> List, Dict
+<span class="hljs-keyword">from</span> enum <span class="hljs-keyword">import</span> Enum
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AgentRole</span><span class="hljs-params">(Enum)</span>:</span>
+    PLANNER = <span class="hljs-string">"planner"</span>        <span class="hljs-comment"># 规划器: 任务分解</span>
+    GENERATOR = <span class="hljs-string">"generator"</span>    <span class="hljs-comment"># 生成器: 生成用例</span>
+    CRITIC = <span class="hljs-string">"critic"</span>          <span class="hljs-comment"># 评审: 质量检查</span>
+    REFINER = <span class="hljs-string">"refiner"</span>        <span class="hljs-comment"># 优化器: 改进用例</span>
+    EXECUTOR = <span class="hljs-string">"executor"</span>      <span class="hljs-comment"># 执行器: 运行测试</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MultiAgentSystem</span>:</span>
+    <span class="hljs-string">"""
+    多Agent协同系统
+    """</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        self.agents = {}
+        self.message_bus = []  <span class="hljs-comment"># 消息总线</span>
+        self.shared_memory = {}  <span class="hljs-comment"># 共享内存</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">register_agent</span><span class="hljs-params">(self, role: AgentRole, agent)</span>:</span>
+        <span class="hljs-string">"""注册Agent"""</span>
+        self.agents[role] = agent
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">run</span><span class="hljs-params">(self, task: str)</span> -&gt; Dict:</span>
+        <span class="hljs-string">"""
+        执行任务
+
+        流程:
+        1. Planner分解任务
+        2. Generator并行生成
+        3. Critic评估
+        4. Refiner优化(如果需要)
+        5. Executor执行测试
+        """</span>
+
+        <span class="hljs-comment"># 1. 任务规划</span>
+        print(<span class="hljs-string">"📋 Step 1: 任务规划"</span>)
+        plan = self.agents[AgentRole.PLANNER].run({
+            <span class="hljs-string">"task"</span>: task,
+            <span class="hljs-string">"context"</span>: self.shared_memory
+        })
+        self.shared_memory[<span class="hljs-string">'plan'</span>] = plan
+        print(<span class="hljs-string">f"计划: <span class="hljs-subst">{plan[<span class="hljs-string">'steps'</span>]}</span>"</span>)
+
+        <span class="hljs-comment"># 2. 并行生成</span>
+        print(<span class="hljs-string">"\n🔧 Step 2: 并行生成用例"</span>)
+        modules = plan[<span class="hljs-string">'modules'</span>]  <span class="hljs-comment"># ["登录模块", "支付模块"]</span>
+
+        <span class="hljs-keyword">from</span> concurrent.futures <span class="hljs-keyword">import</span> ThreadPoolExecutor
+        <span class="hljs-keyword">with</span> ThreadPoolExecutor(max_workers=len(modules)) <span class="hljs-keyword">as</span> executor:
+            futures = [
+                executor.submit(
+                    self.agents[AgentRole.GENERATOR].run,
+                    {<span class="hljs-string">"module"</span>: module, <span class="hljs-string">"context"</span>: self.shared_memory}
+                )
+                <span class="hljs-keyword">for</span> module <span class="hljs-keyword">in</span> modules
+            ]
+
+            all_cases = []
+            <span class="hljs-keyword">for</span> future <span class="hljs-keyword">in</span> futures:
+                cases = future.result()
+                all_cases.extend(cases)
+
+        self.shared_memory[<span class="hljs-string">'generated_cases'</span>] = all_cases
+        print(<span class="hljs-string">f"生成了 <span class="hljs-subst">{len(all_cases)}</span> 条用例"</span>)
+
+        <span class="hljs-comment"># 3. 质量评估</span>
+        print(<span class="hljs-string">"\n⚖️ Step 3: 质量评估"</span>)
+        evaluation = self.agents[AgentRole.CRITIC].run({
+            <span class="hljs-string">"cases"</span>: all_cases,
+            <span class="hljs-string">"prd"</span>: self.shared_memory.get(<span class="hljs-string">'prd'</span>),
+            <span class="hljs-string">"specs"</span>: self.shared_memory.get(<span class="hljs-string">'specs'</span>)
+        })
+        self.shared_memory[<span class="hljs-string">'evaluation'</span>] = evaluation
+        print(<span class="hljs-string">f"评分: <span class="hljs-subst">{evaluation[<span class="hljs-string">'score'</span>]}</span>/100"</span>)
+
+        <span class="hljs-comment"># 4. 迭代优化(如果需要)</span>
+        iteration = <span class="hljs-number">0</span>
+        <span class="hljs-keyword">while</span> evaluation[<span class="hljs-string">'score'</span>] &lt; <span class="hljs-number">85</span> <span class="hljs-keyword">and</span> iteration &lt; <span class="hljs-number">3</span>:
+            print(<span class="hljs-string">f"\n🔄 Step 4.<span class="hljs-subst">{iteration+<span class="hljs-number">1</span>}</span>: 优化迭代"</span>)
+
+            refined_cases = self.agents[AgentRole.REFINER].run({
+                <span class="hljs-string">"cases"</span>: all_cases,
+                <span class="hljs-string">"evaluation"</span>: evaluation,
+                <span class="hljs-string">"suggestions"</span>: evaluation[<span class="hljs-string">'suggestions'</span>]
+            })
+
+            <span class="hljs-comment"># 重新评估</span>
+            evaluation = self.agents[AgentRole.CRITIC].run({
+                <span class="hljs-string">"cases"</span>: refined_cases,
+                <span class="hljs-string">"prd"</span>: self.shared_memory.get(<span class="hljs-string">'prd'</span>),
+                <span class="hljs-string">"specs"</span>: self.shared_memory.get(<span class="hljs-string">'specs'</span>)
+            })
+
+            all_cases = refined_cases
+            iteration += <span class="hljs-number">1</span>
+            print(<span class="hljs-string">f"优化后评分: <span class="hljs-subst">{evaluation[<span class="hljs-string">'score'</span>]}</span>/100"</span>)
+
+        <span class="hljs-comment"># 5. 执行测试(可选)</span>
+        <span class="hljs-keyword">if</span> plan.get(<span class="hljs-string">'auto_execute'</span>):
+            print(<span class="hljs-string">"\n▶️ Step 5: 自动执行测试"</span>)
+            execution_result = self.agents[AgentRole.EXECUTOR].run({
+                <span class="hljs-string">"cases"</span>: all_cases
+            })
+            self.shared_memory[<span class="hljs-string">'execution_result'</span>] = execution_result
+
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-string">"plan"</span>: plan,
+            <span class="hljs-string">"cases"</span>: all_cases,
+            <span class="hljs-string">"evaluation"</span>: evaluation,
+            <span class="hljs-string">"execution"</span>: self.shared_memory.get(<span class="hljs-string">'execution_result'</span>)
+        }
+</div></code></pre>
+<hr>
+<h2 id="%E5%9B%9B%E5%B7%A5%E4%B8%9A%E7%BA%A7%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5">四、工业级最佳实践</h2>
+<h3 id="41-%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7observability">4.1 可观测性(Observability)</h3>
+<pre class="hljs"><code><div><span class="hljs-keyword">from</span> opentelemetry <span class="hljs-keyword">import</span> trace
+<span class="hljs-keyword">from</span> opentelemetry.sdk.trace <span class="hljs-keyword">import</span> TracerProvider
+<span class="hljs-keyword">from</span> opentelemetry.sdk.trace.export <span class="hljs-keyword">import</span> ConsoleSpanExporter, BatchSpanProcessor
+
+<span class="hljs-comment"># 配置OpenTelemetry</span>
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer(__name__)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ObservableRAGEngine</span>:</span>
+    <span class="hljs-string">"""支持全链路追踪的RAG引擎"""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">search_context</span><span class="hljs-params">(self, query)</span>:</span>
+        <span class="hljs-keyword">with</span> tracer.start_as_current_span(<span class="hljs-string">"rag_search"</span>) <span class="hljs-keyword">as</span> span:
+            span.set_attribute(<span class="hljs-string">"query"</span>, query)
+            span.set_attribute(<span class="hljs-string">"collection"</span>, <span class="hljs-string">"knowledge"</span>)
+
+            <span class="hljs-comment"># 检索</span>
+            <span class="hljs-keyword">with</span> tracer.start_as_current_span(<span class="hljs-string">"vector_search"</span>):
+                results = self.vector_search(query)
+                span.set_attribute(<span class="hljs-string">"recall_count"</span>, len(results))
+
+            <span class="hljs-comment"># LLM过滤</span>
+            <span class="hljs-keyword">with</span> tracer.start_as_current_span(<span class="hljs-string">"llm_filter"</span>):
+                filtered = self.llm_filter(results)
+                span.set_attribute(<span class="hljs-string">"filtered_count"</span>, len(filtered))
+
+            <span class="hljs-keyword">return</span> filtered
+</div></code></pre>
+<p><strong>监控面板</strong>:</p>
+<pre class="hljs"><code><div>RAG检索链路追踪:
+├─ rag_search (总耗时: 1.2s)
+│  ├─ vector_search (0.3s) ✓
+│  │  └─ embedding_generation (0.1s)
+│  ├─ bm25_search (0.1s) ✓
+│  ├─ fusion_ranking (0.05s) ✓
+│  └─ llm_filter (0.75s) ⚠️ 慢!
+│
+└─ metrics:
+   - recall_count: 10
+   - filtered_count: 3
+   - precision: 30%
+</div></code></pre>
+<hr>
+<h3 id="42-%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E4%B8%8E%E9%99%8D%E7%BA%A7">4.2 错误处理与降级</h3>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RobustRAGEngine</span>:</span>
+    <span class="hljs-string">"""容错的RAG引擎"""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">search_with_fallback</span><span class="hljs-params">(self, query)</span>:</span>
+        <span class="hljs-string">"""多级降级策略"""</span>
+
+        <span class="hljs-keyword">try</span>:
+            <span class="hljs-comment"># 1. 尝试混合检索</span>
+            <span class="hljs-keyword">return</span> self.hybrid_search(query)
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            logger.warning(<span class="hljs-string">f"混合检索失败: <span class="hljs-subst">{e}</span>, 降级到向量检索"</span>)
+
+            <span class="hljs-keyword">try</span>:
+                <span class="hljs-comment"># 2. 降级: 仅向量检索</span>
+                <span class="hljs-keyword">return</span> self.vector_search(query)
+            <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+                logger.error(<span class="hljs-string">f"向量检索失败: <span class="hljs-subst">{e}</span>, 降级到关键词匹配"</span>)
+
+                <span class="hljs-keyword">try</span>:
+                    <span class="hljs-comment"># 3. 降级: 关键词匹配</span>
+                    <span class="hljs-keyword">return</span> self.keyword_search(query)
+                <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+                    logger.critical(<span class="hljs-string">f"所有检索方法失败: <span class="hljs-subst">{e}</span>"</span>)
+
+                    <span class="hljs-comment"># 4. 兜底: 返回默认规范</span>
+                    <span class="hljs-keyword">return</span> self.get_default_specs()
+</div></code></pre>
+<hr>
+<h3 id="43-%E6%88%90%E6%9C%AC%E4%BC%98%E5%8C%96">4.3 成本优化</h3>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CostAwareAgent</span>:</span>
+    <span class="hljs-string">"""成本敏感的Agent"""</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self)</span>:</span>
+        self.token_price = {
+            <span class="hljs-string">"gemini-1.5-pro"</span>: <span class="hljs-number">0.00125</span>,      <span class="hljs-comment"># $/1k tokens</span>
+            <span class="hljs-string">"gemini-1.5-flash"</span>: <span class="hljs-number">0.000125</span>,   <span class="hljs-comment"># 便宜10倍!</span>
+            <span class="hljs-string">"gemini-2.0-flash"</span>: <span class="hljs-number">0.0001</span>
+        }
+        self.total_cost = <span class="hljs-number">0</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">smart_model_selection</span><span class="hljs-params">(self, task_complexity)</span>:</span>
+        <span class="hljs-string">"""根据任务复杂度选择模型"""</span>
+        <span class="hljs-keyword">if</span> task_complexity == <span class="hljs-string">"simple"</span>:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"gemini-2.0-flash"</span>  <span class="hljs-comment"># 用于RAG过滤、摘要</span>
+        <span class="hljs-keyword">elif</span> task_complexity == <span class="hljs-string">"medium"</span>:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"gemini-1.5-flash"</span>  <span class="hljs-comment"># 用于用例生成</span>
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-keyword">return</span> <span class="hljs-string">"gemini-1.5-pro"</span>    <span class="hljs-comment"># 用于复杂推理、评估</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">with_cache</span><span class="hljs-params">(self, query)</span>:</span>
+        <span class="hljs-string">"""利用Gemini的Context Caching功能"""</span>
+        <span class="hljs-comment"># 对于不变的上下文(如技术规范),可以缓存</span>
+        cached_content = genai.caching.CachedContent.create(
+            model=<span class="hljs-string">'models/gemini-1.5-pro'</span>,
+            system_instruction=<span class="hljs-string">"你是测试专家..."</span>,
+            contents=[self.static_rag_context],  <span class="hljs-comment"># 缓存RAG上下文</span>
+            ttl=datetime.timedelta(hours=<span class="hljs-number">1</span>)
+        )
+
+        <span class="hljs-comment"># 使用缓存(大幅降低成本)</span>
+        model = genai.GenerativeModel.from_cached_content(cached_content)
+        response = model.generate_content(query)
+
+        <span class="hljs-keyword">return</span> response
+</div></code></pre>
+<hr>
+<h2 id="%E4%BA%94%E5%AE%9E%E6%96%BD%E8%B7%AF%E7%BA%BF%E5%9B%BE">五、实施路线图</h2>
+<h3 id="phase-1-rag%E7%B3%BB%E7%BB%9F%E5%8D%87%E7%BA%A7-2%E5%91%A8">Phase 1: RAG系统升级 (2周)</h3>
+<p><strong>Week 1: 检索优化</strong></p>
+<ul>
+<li><input type="checkbox" id="checkbox0"><label for="checkbox0">实现混合检索(向量+BM25)</label></li>
+<li><input type="checkbox" id="checkbox1"><label for="checkbox1">添加Re-ranking层</label></li>
+<li><input type="checkbox" id="checkbox2"><label for="checkbox2">支持多种Embedding模型(BGE-M3)</label></li>
+<li><input type="checkbox" id="checkbox3"><label for="checkbox3">元数据过滤检索</label></li>
+</ul>
+<p><strong>Week 2: 质量提升</strong></p>
+<ul>
+<li><input type="checkbox" id="checkbox4"><label for="checkbox4">语义分块</label></li>
+<li><input type="checkbox" id="checkbox5"><label for="checkbox5">HyDE查询改写</label></li>
+<li><input type="checkbox" id="checkbox6"><label for="checkbox6">RAGAS评估体系</label></li>
+<li><input type="checkbox" id="checkbox7"><label for="checkbox7">缓存机制</label></li>
+</ul>
+<hr>
+<h3 id="phase-2-agent%E6%9E%B6%E6%9E%84%E9%87%8D%E6%9E%84-3%E5%91%A8">Phase 2: Agent架构重构 (3周)</h3>
+<p><strong>Week 3: 基础能力</strong></p>
+<ul>
+<li><input type="checkbox" id="checkbox8"><label for="checkbox8">实现ReAct推理循环</label></li>
+<li><input type="checkbox" id="checkbox9"><label for="checkbox9">工具库开发(5个核心工具)</label></li>
+<li><input type="checkbox" id="checkbox10"><label for="checkbox10">记忆系统(长短期记忆)</label></li>
+</ul>
+<p><strong>Week 4: 高级能力</strong></p>
+<ul>
+<li><input type="checkbox" id="checkbox11"><label for="checkbox11">Function Calling集成</label></li>
+<li><input type="checkbox" id="checkbox12"><label for="checkbox12">反思机制</label></li>
+<li><input type="checkbox" id="checkbox13"><label for="checkbox13">多Agent协同框架</label></li>
+</ul>
+<p><strong>Week 5: 集成与测试</strong></p>
+<ul>
+<li><input type="checkbox" id="checkbox14"><label for="checkbox14">LangGraph流程编排</label></li>
+<li><input type="checkbox" id="checkbox15"><label for="checkbox15">端到端测试</label></li>
+<li><input type="checkbox" id="checkbox16"><label for="checkbox16">性能优化</label></li>
+</ul>
+<hr>
+<h3 id="phase-3-%E7%94%9F%E4%BA%A7%E5%8C%96%E6%94%B9%E9%80%A0-2%E5%91%A8">Phase 3: 生产化改造 (2周)</h3>
+<p><strong>Week 6: 工程化</strong></p>
+<ul>
+<li><input type="checkbox" id="checkbox17"><label for="checkbox17">监控埋点(OpenTelemetry)</label></li>
+<li><input type="checkbox" id="checkbox18"><label for="checkbox18">错误处理与降级</label></li>
+<li><input type="checkbox" id="checkbox19"><label for="checkbox19">成本优化</label></li>
+<li><input type="checkbox" id="checkbox20"><label for="checkbox20">日志系统</label></li>
+</ul>
+<p><strong>Week 7: 部署与文档</strong></p>
+<ul>
+<li><input type="checkbox" id="checkbox21"><label for="checkbox21">Docker优化</label></li>
+<li><input type="checkbox" id="checkbox22"><label for="checkbox22">CI/CD流水线</label></li>
+<li><input type="checkbox" id="checkbox23"><label for="checkbox23">API文档</label></li>
+<li><input type="checkbox" id="checkbox24"><label for="checkbox24">使用手册</label></li>
+</ul>
+<hr>
+<h2 id="%E5%85%AD%E6%80%BB%E7%BB%93">六、总结</h2>
+<h3 id="%E6%A0%B8%E5%BF%83%E4%BC%98%E5%8C%96%E7%82%B9%E6%8C%89%E4%BC%98%E5%85%88%E7%BA%A7%E6%8E%92%E5%BA%8F">核心优化点(按优先级排序)</h3>
+<table>
+<thead>
+<tr>
+<th>优化项</th>
+<th>难度</th>
+<th>收益</th>
+<th>优先级</th>
+<th>实施周期</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>混合检索(向量+BM25)</td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>P0</td>
+<td>3天</td>
+</tr>
+<tr>
+<td>Re-ranking</td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+<td>P0</td>
+<td>2天</td>
+</tr>
+<tr>
+<td>HyDE查询改写</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+<td>P1</td>
+<td>3天</td>
+</tr>
+<tr>
+<td>ReAct Agent</td>
+<td>⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>P0</td>
+<td>5天</td>
+</tr>
+<tr>
+<td>工具调用(Function Calling)</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+<td>P1</td>
+<td>4天</td>
+</tr>
+<tr>
+<td>记忆系统</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>P1</td>
+<td>4天</td>
+</tr>
+<tr>
+<td>多Agent协同</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>P1</td>
+<td>7天</td>
+</tr>
+<tr>
+<td>GraphRAG</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>P2</td>
+<td>10天</td>
+</tr>
+<tr>
+<td>语义分块</td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>P2</td>
+<td>2天</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="%E5%BF%AB%E9%80%9F%E6%88%90%E6%9E%9Cmvp%E7%89%88%E6%9C%AC1%E5%91%A8%E5%AE%9E%E7%8E%B0">快速成果(MVP版本,1周实现)</h3>
+<p><strong>最小可行优化</strong>:</p>
+<ol>
+<li>✅ 混合检索(向量+BM25) - 3天</li>
+<li>✅ Re-ranking - 2天</li>
+<li>✅ 基础ReAct循环 - 2天</li>
+</ol>
+<p><strong>预期效果</strong>:</p>
+<ul>
+<li>检索准确率: 60% → 85%</li>
+<li>用例质量评分: 70分 → 88分</li>
+<li>用户满意度显著提升</li>
+</ul>
+<hr>
+<h3 id="%E9%9D%A2%E8%AF%95%E8%AF%9D%E6%9C%AF%E5%BB%BA%E8%AE%AE">面试话术建议</h3>
+<p><strong>当被问到&quot;这个项目有什么不足&quot;时:</strong></p>
+<blockquote>
+<p>&quot;在深入研究RAG和Agent技术后,我发现项目在以下几个方面有优化空间:</p>
+<p><strong>RAG层面</strong>:</p>
+<ol>
+<li>当前只使用向量检索,我计划引入<strong>混合检索</strong>(向量+BM25),并增加Re-ranking层,这能将召回率提升30%</li>
+<li>Chunking策略过于简单,应改用<strong>语义分块</strong>,避免在关键信息中间切断</li>
+<li>缺少HyDE查询改写,对于短查询效果不佳</li>
+</ol>
+<p><strong>Agent层面</strong>:</p>
+<ol>
+<li>当前只是Prompt工程,不是真正的Agent。我打算实现<strong>ReAct推理循环</strong>,让AI能够自主规划、使用工具、反思</li>
+<li>应该支持<strong>Function Calling</strong>,例如让AI主动调用RAG检索、边界值计算等工具</li>
+<li>Generator和Critic应该改为<strong>Multi-Agent协同系统</strong>,用LangGraph编排自动化闭环</li>
+</ol>
+<p>我已经完成了技术调研和Demo验证,计划用2周时间完成核心优化。&quot;</p>
+</blockquote>
+<p><strong>体现出的能力</strong>:</p>
+<ul>
+<li>✅ 自我批判能力</li>
+<li>✅ 技术深度(了解业界前沿)</li>
+<li>✅ 工程能力(有具体实施方案)</li>
+<li>✅ 持续学习能力</li>
+</ul>
+<hr>
+<p><strong>祝项目优化顺利!有任何技术问题随时交流!</strong> 🚀</p>
+
+</body>
+</html>
