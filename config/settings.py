@@ -2,23 +2,17 @@ import os
 import json
 
 
-# --- 1. 智能代理配置 ---
+# --- 1. 代理配置 ---
 def setup_proxy():
     """
     设置网络代理。
-    优先级：系统/Docker环境变量 > 代码硬编码默认值
+    DashScope 是阿里云国内服务，通常不需要代理。
+    仅当用户主动通过环境变量设置了代理时才使用。
     """
-    # 如果系统环境（包括 Docker Compose 传进来的）已经设置了代理，就不要覆盖它！
     if os.environ.get("HTTP_PROXY") or os.environ.get("HTTPS_PROXY"):
-        print(f"检测到系统代理设置，跳过本地配置。")
-        return
-
-    # 只有在本地直接运行且没有环境变量时，才使用这个默认值
-    # 你可以保留这个方便自己本地调试，但提交到 GitHub 也没关系，因为别人运行时如果不配环境，只是连不上网，不会报错
-    default_proxy = 'http://127.0.0.1:7897'
-    os.environ['HTTP_PROXY'] = default_proxy
-    os.environ['HTTPS_PROXY'] = default_proxy
-    print(f"使用本地默认代理: {default_proxy}")
+        print(f"检测到系统代理设置，保持使用。")
+    else:
+        print("未设置代理，DashScope API 将直连（国内网络无需代理）。")
 
 
 # --- 2. 配置文件路径 ---
@@ -43,16 +37,13 @@ def load_config():
         except Exception as e:
             print(f"读取配置文件失败: {e}")
 
-    # 2. 从环境变量加载各 API Key（Docker/云部署时通过环境变量注入）
-    anthropic_key = os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY")
-    if anthropic_key:
-        config['claude_api_key'] = anthropic_key
+    # 2. 环境变量优先（Docker/云部署时通过环境变量注入）
     if os.environ.get("DASHSCOPE_API_KEY"):
         config['dashscope_api_key'] = os.environ.get("DASHSCOPE_API_KEY")
 
-    # 向后兼容：旧版 GEMINI_API_KEY 映射（保留以防旧配置文件）
-    if os.environ.get("GEMINI_API_KEY"):
-        config.setdefault('api_key', os.environ.get("GEMINI_API_KEY"))
+    # 3. 向后兼容：旧 api_key 字段自动映射为 dashscope_api_key
+    if not config.get('dashscope_api_key') and config.get('api_key'):
+        config['dashscope_api_key'] = config['api_key']
 
     return config
 
