@@ -1,13 +1,17 @@
 chromadb==1.5.5
-google-generativeai==0.8.5
 pandas==2.3.3
 pillow==12.0.0
 PyYAML==6.0.3
 streamlit==1.51.0
 watchdog==6.0.0
 
-# LangChain组件（RAG层升级新增）
-langchain-text-splitters==0.3.0
+# LangChain组件（RAG层升级 + LLM层升级）
+langchain-text-splitters>=1.1.0
+langchain-community>=0.4.0
+langchain-core>=1.2.0
 rank-bm25==0.2.2
 sentence-transformers==3.3.1
 numpy>=1.24.0
+
+# API 客户端（统一使用阿里云 DashScope）
+dashscope>=1.20.0

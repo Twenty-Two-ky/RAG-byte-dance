@@ -5,10 +5,8 @@ import uuid
 import sys
 import logging
 from datetime import datetime
-import google.generativeai as genai
-from PIL import Image
 
-# LangChain组件（新增：替代自研TextSplitter，引入混合检索+重排序）
+# LangChain组件（RAG层升级：替代自研TextSplitter，引入混合检索+重排序）
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from rank_bm25 import BM25Okapi
 from sentence_transformers import CrossEncoder
@@ -28,11 +26,22 @@ if not os.path.exists(DOC_PATH):
     os.makedirs(DOC_PATH)
 
 class RAGEngine:
-    def __init__(self, api_key):
-        if not api_key: raise ValueError("RAG Engine 需要 API Key")
+    def __init__(self, claude_api_key: str = None, dashscope_api_key: str = None):
+        """
+        Args:
+            claude_api_key:    Anthropic API Key，用于文件解析（Claude Vision）。
+                               为空时自动读取 ANTHROPIC_API_KEY 环境变量。
+            dashscope_api_key: 阿里云 DashScope API Key，用于文本向量化。
+                               为空时自动读取 DASHSCOPE_API_KEY 环境变量。
+        """
+        self.claude_api_key = claude_api_key or os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY")
+        self.dashscope_api_key = dashscope_api_key or os.environ.get("DASHSCOPE_API_KEY")
+
+        if not self.dashscope_api_key:
+            raise ValueError("RAG Engine 需要 DashScope API Key（用于 Embedding）")
+
         self.client = chromadb.PersistentClient(path=DB_PATH)
-        self.embedding_fn = GeminiEmbeddingFunction(api_key)
-        self.api_key = api_key
+        self.embedding_fn = DashScopeEmbeddingFunction(self.dashscope_api_key)
 
         self.history_coll = self.client.get_or_create_collection(name="history_cases", embedding_function=self.embedding_fn)
         self.knowledge_coll = self.client.get_or_create_collection(name="company_knowledge", embedding_function=self.embedding_fn)
@@ -165,29 +174,37 @@ class RAGEngine:
             f.write(file_obj.read())
         return file_path
 
-    def parse_file_content(self, file_obj, file_type, model_name="models/gemini-1.5-flash"):
-        """利用 AI 解析图片/PDF 内容为文本"""
+    def parse_file_content(self, file_obj, file_type, model_name=None):
+        """
+        利用 Claude Vision 解析图片/PDF 内容为文本。
+        替代原 Gemini 多模态解析，使用 ClaudeChainManager.parse_file()。
+
+        Args:
+            file_obj:   文件对象（需支持 seek/read）
+            file_type:  MIME 类型字符串，如 "image/jpeg"、"application/pdf"
+            model_name: 已废弃（保留参数以向后兼容），实际使用 CLAUDE_MODEL
+
+        Returns:
+            解析后的纯文本内容
+        """
         try:
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel(model_name)
-            
-            content_part = []
             file_obj.seek(0)
-            
-            prompt = PromptManager.MULTIMODAL_PARSE_PROMPT
-            
-            if "image" in file_type:
-                img = Image.open(file_obj)
-                content_part = [prompt, img]
-            elif "pdf" in file_type:
-                file_bytes = file_obj.read()
-                content_part = [prompt, {"mime_type": "application/pdf", "data": file_bytes}]
+            file_bytes = file_obj.read()
+
+            if "image" in file_type or "pdf" in file_type:
+                from core.lc_chain import TongyiChainManager
+                chain_mgr = TongyiChainManager(api_key=self.dashscope_api_key)
+                return chain_mgr.parse_file(
+                    file_bytes=file_bytes,
+                    media_type=file_type,
+                    prompt=PromptManager.MULTIMODAL_PARSE_PROMPT
+                )
             else:
-                return file_obj.read().decode('utf-8')
-            
-            resp = model.generate_content(content_part)
-            return resp.text
+                # 纯文本文件直接解码
+                return file_bytes.decode('utf-8', errors='ignore')
+
         except Exception as e:
+            logger.error(f"文件解析失败: {e}")
             return f"[解析失败] {str(e)}"
 
     def add_knowledge(self, file_obj, summary="", content_text=None, model_name="models/gemini-1.5-flash"):
@@ -413,21 +430,38 @@ class RAGEngine:
 
         return "\n\n<<<RAG_SEP>>>\n\n".join(context_parts), list(set(sources))
 
-class GeminiEmbeddingFunction(chromadb.EmbeddingFunction):
-    def __init__(self, api_key):
-        genai.configure(api_key=api_key)
+class DashScopeEmbeddingFunction(chromadb.EmbeddingFunction):
+    """
+    阿里云 DashScope text-embedding-v4 向量化函数。
+    替代原 GeminiEmbeddingFunction，无需 Google API Key。
+
+    text-embedding-v4 规格：
+      - 输出维度: 1024（默认）
+      - 最大输入长度: 8192 tokens
+      - 支持中英文
+    """
+    EMBEDDING_DIM = 1024
+
+    def __init__(self, api_key: str):
+        import dashscope
+        dashscope.api_key = api_key
+        self.api_key = api_key
 
     def __call__(self, input):
+        from dashscope import TextEmbedding
         if isinstance(input, str):
             input = [input]
         try:
-            result = genai.embed_content(
-                model="models/text-embedding-004",
-                content=input,
-                task_type="retrieval_document"
+            result = TextEmbedding.call(
+                model="text-embedding-v4",
+                input=input,
+                api_key=self.api_key,
+                text_type="document"
             )
-            return result['embedding']
+            if result.status_code == 200:
+                return [item['embedding'] for item in result.output['embeddings']]
+            else:
+                raise RuntimeError(f"DashScope API 错误: {result.code} - {result.message}")
         except Exception as e:
-            # 改进: 裸except → 明确Exception + 日志记录
-            logger.error(f"Embedding生成失败: {e}")
-            return [[0.0] * 768 for _ in input]
+            logger.error(f"DashScope Embedding 生成失败: {e}")
+            return [[0.0] * self.EMBEDDING_DIM for _ in input]

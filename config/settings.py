@@ -43,11 +43,16 @@ def load_config():
         except Exception as e:
             print(f"读取配置文件失败: {e}")
 
-    # 2. 【核心安全机制】尝试从环境变量加载 Key
-    # 这样在 Docker 或云部署时，可以直接通过环境变量注入 Key，而不需要创建 json 文件
-    env_key = os.environ.get("GEMINI_API_KEY")
-    if env_key:
-        config['api_key'] = env_key
+    # 2. 从环境变量加载各 API Key（Docker/云部署时通过环境变量注入）
+    anthropic_key = os.environ.get("ANTHROPIC_AUTH_TOKEN") or os.environ.get("ANTHROPIC_API_KEY")
+    if anthropic_key:
+        config['claude_api_key'] = anthropic_key
+    if os.environ.get("DASHSCOPE_API_KEY"):
+        config['dashscope_api_key'] = os.environ.get("DASHSCOPE_API_KEY")
+
+    # 向后兼容：旧版 GEMINI_API_KEY 映射（保留以防旧配置文件）
+    if os.environ.get("GEMINI_API_KEY"):
+        config.setdefault('api_key', os.environ.get("GEMINI_API_KEY"))
 
     return config
 
