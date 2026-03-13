@@ -1,212 +1,251 @@
-# 🤖 Auto_prd_test_expert
+# Auto PRD Test Agent
 
-![Status](https://img.shields.io/badge/Status-Beta-blue)
-![Python](https://img.shields.io/badge/Python-3.10-green)
-![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red)
-![LLM](https://img.shields.io/badge/LLM-Google%20Gemini-orange)
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![LangChain](https://img.shields.io/badge/LangChain-LCEL-green)
+![LLM](https://img.shields.io/badge/LLM-通义千问_qwen3--max-orange)
+![RAG](https://img.shields.io/badge/RAG-ChromaDB+BM25+Reranker-purple)
 
-> **"从精准检索到智能共创，重塑测试用例生成体验。"**
-本项目来源于字节训练营，个人结题项目，希望对尝试测开方向小伙伴们有一定的学习与帮忙
-Auto_prd_test_expert 是一款基于 **“轻量化本地部署 + 企业级大模型 API”** 混合架构的智能测试助手。它采用 **Advanced RAG** 和 **Human-in-the-Loop** 闭环设计，解决了传统工具“各种幻觉”、“无法微调”、“流程割裂”的痛点，是一个具备记忆与质检能力的可进化测试管家。
+基于 **RAG 混合检索 + 手写 ReAct Agent** 的智能测试用例生成系统。输入 PRD 需求文档，Agent 自主决策调用工具链，自动生成结构化测试用例并通过质量评估闭环迭代优化。
 
----
-
-## 🎯 一、项目背景与定位
-
-### 1.1 行业痛点
-在软件测试领域，测试人员长期面临以下挑战：
-*   **🕒 文档理解耗时**：PRD（需求文档）冗长，人工提取测试点效率低。
-*   **🕳️ 用例覆盖不全**：容易遗漏边界值、异常场景或安全隐患。
-*   **♻️ 经验难以复用**：优质历史用例沉淀在文档坟墓中，无法自动联想。
-*   **😵‍💫 AI 生成幻觉**：通用大模型不懂内部规范（如密码策略），生成内容“假大空”。
-
-### 1.2 产品定位
-构建 **“精准检索 -> 智能共创 -> 对抗评估”** 的完整闭环体系。
-*   **精准检索**：漏斗式 RAG，拒绝噪音。
-*   **智能共创**：多模态输入 + 双屏交互，支持持续 Fine-tune。
-*   **对抗评估**：引入 AI Critic 角色，像 QA 专家一样对用例进行质检。
+项目来源于字节跳动训练营结题项目，在原始版本基础上进行了 4 个阶段的架构升级，从单次 LLM 调用演进为具备 RAG 检索、LCEL 链式调用、LangChain Tool 工具库、ReAct 推理循环的完整 Agent 系统。
 
 ---
 
-## 🚀 二、核心功能亮点
+## 架构总览
 
-### 🛡️ 功能一：漏斗式 RAG 精准检索体系
-> **解决痛点**：解决通用大模型不懂业务规范、引用内容包含噪音的问题。
-
-*   **📥 输入**：非结构化资产（PDF/图片/历史用例） + 当前 PRD。
-*   **⚙️ 处理 (The Funnel)**：
-    1.  **智能切片 (Smart Chunking)**：基于滑窗机制将文档切分为细粒度语义片段。
-    2.  **向量粗筛 (Vector Retrieval)**：利用 Embedding 快速召回 Top-K 相关片段。
-    3.  **LLM 智能细筛 (Contextual Filtering)**：引入轻量级模型作为“过滤器”，剔除无关噪音（如背景介绍），只保留核心干货。
-*   **📤 输出**：100% 纯净的核心知识上下文，并向用户**透明展示**引用的具体来源文件名。
-
-### 🧠 功能二：多模态智能共创体系
-> **解决痛点**：交互体验差、无法微调、视觉逻辑丢失。
-
-*   **📥 输入**：多模态材料（PDF 文档、**UI 设计图**、补充文本）。
-*   **⚙️ 处理**：
-    1.  **视觉逻辑推导**：利用 Gemini Vision 识别 UI 元素（按钮/输入框）并推导交互逻辑。
-    2.  **双屏共创交互**：
-        *   *左侧（思维链）*：展示 AI 分析思路，支持多轮对话微调（Fine-tune）。
-        *   *右侧（实时交付）*：动态渲染结构化表格，所见即所得。
-    3.  **意图路由 (Intent Routing)**：自动识别用户是“闲聊”还是“修改指令”，动态切换 Prompt 策略。
-*   **📤 结果**：
-    *   支持 **CSV/Excel/YAML/JSON/Markdown** 五种格式一键导出。
-    *   **资产回流**：确认后的用例可“归档”回知识库，成为下一次生成的“历史参考”。
-
-### ⚖️ 功能三：智能对抗评估体系
-> **解决痛点**：人工验收慢、缺乏标准度量。
-
-*   **⚙️ 处理**：
-    *   **独立评审 Agent (AI Critic)**：构建“QA 验收专家”角色，与生成者形成对抗。
-    *   **多维质检**：覆盖率分析、逻辑自洽性检查、去重与规范性检测。
-    *   **差异化比对**：若上传了标准用例 (Golden Sample)，自动计算偏差。
-*   **📤 结果**：输出可视化的**质量评估报告**（包含评分、漏测点、优化建议）。
-
----
-
-## 📸 Demo 展示
-
-> *![alt text](image-1.png)*
-> *   **图 1**: 上传多模态文件进行RAG向量库生成与UI前端可视化预览，搜寻、删除、下载与核心摘要生成
-![alt text](image-2.png)![alt text](image-3.png)
-> *   **图 2**: 构建RAG知识库的污染文件与利用RAG知识库与LLM进行相关知识检索生成
-![alt text](image-4.png)![alt text](image-5.png)![alt text](image-6.png)![alt text](image-7.png)![alt text](image-8.png)
-> *   **图 3**: 进行测试用例生成后人工微调、查看、多种格式下载、入库
-![alt text](image-9.png)
-> *   **图 4**: 测试专家对测试用例评估效果展示
----
-
-## 🛠️ 三、技术栈与架构
-
-### 3.1 核心技术栈
-| 模块 | 技术选型 | 理由 |
-| :--- | :--- | :--- |
-| **Lang** | **Python 3.10** | AI 领域标准语言，生态最丰富。 |
-| **Frontend** | **Streamlit** | 专为数据科学设计，支持 `Session State` 状态管理与快速迭代。 |
-| **Backend** | **Google Generative AI SDK** | 原生支持 Gemini Pro/Flash，具备 1M+ Token 上下文与多模态能力。 |
-| **RAG DB** | **ChromaDB** | 轻量级本地向量数据库，无需服务器，保障**数据隐私**。 |
-| **Data** | **Pandas** | 强大的数据清洗与格式转换能力 (JSON <-> DataFrame)。 |
-
-### 3.2 核心代码模块说明
-
-本项目采用模块化分层架构：
-
-#### 📂 配置层 (`config/`)
-*   **`prompts.py`**: 统一管理所有 Prompt。内置**智能路由逻辑**，根据用户意图动态组装 System Prompt，并强制执行“解释与数据分离”策略。
-
-#### 📂 核心逻辑层 (`core/`)
-*   **`rag_engine.py` (知识引擎)**: 封装 ChromaDB 操作。实现了 `TextSplitter` 递归切片算法，以及多模态解析接口 `parse_file_content`（支持 UI 图转文字）。
-*   **`llm_client.py` (AI 网关)**: 封装 Gemini API，实现带历史记忆的对话接口 `get_gemini_chat_response`。
-*   **`evaluator.py` (评估引擎)**: 独立的质检模块，负责调用 LLM 输出结构化的质量报告。
-
-#### 📂 前端交互层 (`ui/`)
-*   **`main.py` (主控台)**: 业务编排中心。
-    *   **RAG 智能双重筛选**: 串联 `rag_engine` (粗筛) 与 `llm_client` (细筛/去噪)。
-    *   **思维链共创**: 利用 `split_text_and_json` 实现左侧聊天流与右侧数据流的视觉分离。
-    *   **资产归档**: 闭环逻辑，将最终用例回流至 ChromaDB。
-*   **`sidebar.py`**: 全局配置入口，包含动态模型加载与 API Key 管理。
-*   **`components.py`**: 专注于数据表格渲染与多格式导出。
-
----
-
-## 🔮 四、未来展望
-
-1.  **输入端拓展**：
-    *   集成 **FastAPI**，支持飞书/钉钉机器人接入，实现 IM 群组中的“对话即测试”。
-    *   增加 URL 解析能力（直接读取在线 PRD/Jira）。
-2.  **输出端 Agent 化**：
-    *   自动化脚本生成：利用生成的结构化数据，调用大模型生成 **Pytest / Midscene.js** 执行脚本。
-    *   集成 CI/CD 流水线，实现“从文档到代码”的自动化闭环。
-3.  **上游优化**：
-    *   增加 **“PRD 质检”** 模块，在生成用例前先对需求文档本身进行逻辑漏洞分析。
-
----
-
-## 📥 安装与运行
-
-## 🛠️ 一、 环境部署与配置
-
-本项目提供 **Docker（推荐）** 和 **本地源码** 两种部署方式。由于项目依赖 Google Gemini API，请确保你的运行环境能够访问 Google 服务。
-
-### 🐳 方式一：使用 Docker 部署（推荐）
-
-这是最简单、最稳定的部署方式，无需配置复杂的 Python 环境，且已配置好数据持久化。
-
-#### 1. 前置准备
-*   安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows/Mac/Linux)。
-*   克隆本项目代码：
-    ```bash
-    git clone https://github.com/YourUsername/Auto_prd_test_expert.git
-    cd Auto_prd_test_expert
-    ```
-
-#### 2. 配置 API Key
-为了安全起见，API Key 不包含在代码库中。请按照以下步骤配置：
-1.  进入 `data/` 目录。
-2.  将 `user_config.example.json` 重命名为 `user_config.json`。
-3.  编辑该文件，填入你的 Gemini API Key：
-    ```json
-    {
-        "api_key": "YOUR_GEMINI_API_KEY_HERE"
-    }
-    ```
-
-#### 3. 配置网络代理（国内用户必读）
-如果你在中国大陆地区使用，必须配置代理才能连接 Gemini API。
-打开项目根目录下的 `docker-compose.yml`，找到 `environment` 部分，根据你的实际代理端口修改：
-
-```yaml
-    environment:
-      # host.docker.internal 代表宿主机 IP
-      # 请将 7897 修改为你本地代理软件（如 v2ray/clash）的端口号
-      - HTTP_PROXY=http://host.docker.internal:7897
-      - HTTPS_PROXY=http://host.docker.internal:7897
 ```
-![alt text](image.png)
-#### 4. 一键启动
-在项目根目录下打开终端，运行：
-
-```bash
-docker-compose up -d --build
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Auto PRD Test Agent                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  PRD 需求文档                                                       │
+│       │                                                             │
+│       ▼                                                             │
+│  ┌──────────────────┐    Phase 1: RAG 混合检索引擎                 │
+│  │   RAG Engine      │    向量检索(70%) + BM25(30%) + RRF 融合      │
+│  │   rag_engine.py   │──► BGE-Reranker 精排 ──► LLM 上下文去噪     │
+│  └────────┬─────────┘                                               │
+│           │ 检索上下文                                               │
+│           ▼                                                         │
+│  ┌──────────────────┐    Phase 4: 手写 ReAct 推理循环              │
+│  │   ReAct Agent     │    Thought ──► Action ──► Observation        │
+│  │   react_agent.py  │         ◄── 循环直到 Final Answer            │
+│  └────────┬─────────┘                                               │
+│           │                                                         │
+│           ├── rag_search         ──► 知识库检索                     │
+│           ├── generate_test_cases ──► 用例生成     Phase 3: 工具库  │
+│           ├── evaluate_test_quality ► 质量评估                      │
+│           ├── add_knowledge      ──► 知识入库                       │
+│           └── parse_file         ──► 文件解析                       │
+│                                                                     │
+│           │ 质量不达标？                                             │
+│           ▼                                                         │
+│  ┌──────────────────┐    质量迭代闭环                               │
+│  │ 评估反馈 + 改进   │    score < target ──► 注入反馈 ──► 重新生成  │
+│  └────────┬─────────┘                                               │
+│           │                                                         │
+│           ▼                                                         │
+│     结构化测试用例 (JSON)                                           │
+│                                                                     │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
+│  Phase 2: LLM 层 (TongyiChainManager)                              │
+│  ChatTongyi(qwen3-max) | ChatPromptTemplate | StrOutputParser       │
+│  LCEL pipe 语法: simple_chain(单轮) + chat_chain(多轮)             │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-*   构建过程可能需要几分钟（已配置国内镜像源加速）。
-*   启动成功后，浏览器访问：[http://127.0.0.1:8501](http://127.0.0.1:8501) 即可使用。
+---
 
-#### 5. 停止服务
-```bash
-docker-compose down
+## 核心技术亮点
+
+### 1. RAG 混合检索引擎 (Phase 1)
+
 ```
-> **关于数据持久化**：Docker 已配置挂载卷，你的知识库（向量数据）和上传的原始文件会保存在本地 `data/` 目录下，重启容器数据**不会丢失**。
+原始文档 ──► RecursiveCharacterTextSplitter 切片
+         ──► ChromaDB 向量存储 (text-embedding-v4, 1024维)
+
+查询 ──► 向量检索 Top-K (权重 0.7)
+     ──► BM25 关键词检索 (权重 0.3)
+     ──► RRF (Reciprocal Rank Fusion) 融合排序
+     ──► BGE-Reranker 精排 (BAAI/bge-reranker-base)
+     ──► LLM 上下文去噪 (RAG_FILTER_PROMPT)
+```
+
+- **混合检索**：向量语义 + BM25 关键词互补，解决纯向量检索漏召回问题
+- **精排重排序**：Cross-Encoder 模型对候选文档重新打分，提升相关性
+- **优雅降级**：Reranker 加载失败自动跳过，hybrid_search 异常回退纯向量检索
+
+### 2. LCEL 链式调用 (Phase 2)
+
+```python
+# LangChain Expression Language — pipe 语法
+simple_chain = ChatPromptTemplate | ChatTongyi(model="qwen3-max") | StrOutputParser()
+chat_chain   = ChatPromptTemplate | ChatTongyi(model="qwen3-max") | StrOutputParser()
+```
+
+- **TongyiChainManager**：封装两条 LCEL 链，对外提供 `generate()` 和 `chat()` 接口
+- **DashScope 统一**：LLM (qwen3-max) + Embedding (text-embedding-v4) + 评估，全部使用同一个 API Key
+- **多模态支持**：qwen-vl-max 模型处理 UI 截图识别
+
+### 3. LangChain Tool 工具库 (Phase 3)
+
+| 工具名 | 功能 | 封装的底层能力 |
+|--------|------|---------------|
+| `rag_search` | 知识库检索 | RAGEngine.search_context() |
+| `add_knowledge` | 知识入库 | RAGEngine.add_knowledge() |
+| `parse_file` | 文件解析 | TongyiChainManager.parse_file() |
+| `generate_test_cases` | 用例生成 | TongyiChainManager.generate() |
+| `evaluate_test_quality` | 质量评估 | Evaluator.evaluate_cases() |
+
+所有工具使用 `@tool` 装饰器定义，LangChain 自动生成 JSON Schema 供 Agent 推理时读取工具说明。
+
+### 4. ReAct Agent 手写推理循环 (Phase 4)
+
+**为什么手写而不用 AgentExecutor**：AgentExecutor 已被 LangChain 标记为 legacy，手写循环教育价值更高，可逐行解释 ReAct 原理。
+
+```
+循环（最多 max_steps 次）：
+  1. LLM 生成推理文本
+  2. 正则解析：Thought / Action / Action Input / Final Answer
+  3. Final Answer? ──► 返回结果
+  4. Action? ──► tool_map[name].invoke(input) ──► Observation
+  5. Observation 追加到 scratchpad，继续下一轮
+```
+
+关键设计：
+- **三层正则解析**：标准格式 → 清理 Markdown 代码块 → 兜底包装为 `{"input": raw_text}`
+- **容错机制**：连续 3 次解析失败才终止，工具执行错误作为 Observation 反馈供 Agent 自我修正
+- **tool_map 动态调度**：`{tool.name: tool for tool in AGENT_TOOLS}`，增删工具无需改 Agent 代码
+- **质量迭代闭环**：`run_with_quality_loop()` 自动执行 生成 → 评估 → 注入反馈 → 重新生成
 
 ---
 
-### 🐍 方式二：本地源码部署（开发调试）
+## 项目结构
 
-如果你需要修改代码或进行二次开发，建议使用 Anaconda 环境。
-
-#### 1. 创建虚拟环境
-```bash
-conda create -n gemini_test python=3.10
-conda activate gemini_test
+```
+├── config/
+│   ├── prompts.py            # Prompt 模板管理（含 ReAct System Prompt）
+│   └── settings.py           # 全局配置（代理、路径）
+│
+├── core/
+│   ├── rag_engine.py         # RAG 引擎：混合检索 + Reranker + ChromaDB
+│   ├── lc_chain.py           # TongyiChainManager：LCEL 双链封装
+│   ├── llm_client.py         # LLM 工具函数（JSON 提取等）
+│   ├── evaluator.py          # 测试用例质量评估器
+│   └── agent/
+│       ├── tools.py           # 5 个 LangChain Tool 定义 + AGENT_TOOLS 列表
+│       └── react_agent.py     # ReAct Agent：手写推理循环 + 质量迭代
+│
+├── ui/
+│   ├── main.py               # Streamlit 主界面
+│   ├── sidebar.py            # 侧边栏配置
+│   └── components.py         # UI 组件（表格渲染、导出）
+│
+├── tests/
+│   ├── test_rag_engine.py    # RAG 引擎测试
+│   ├── test_lc_chain.py      # LCEL 链测试
+│   ├── test_tools.py         # 工具库测试
+│   └── test_react_agent.py   # ReAct Agent 测试
+│
+├── data/
+│   ├── vector_db/            # ChromaDB 向量数据库
+│   └── raw_files/            # 上传的原始文档
+│
+├── 变更/                      # 每次升级的变更日志
+├── requirements.txt
+└── readme.md
 ```
 
-#### 2. 安装依赖
+---
+
+## 技术栈
+
+| 模块 | 技术选型 | 说明 |
+|------|---------|------|
+| LLM | 通义千问 qwen3-max (DashScope API) | 阿里云大模型，替代原 Google Gemini |
+| Embedding | text-embedding-v4 (1024维) | DashScope 向量化服务 |
+| RAG 框架 | LangChain + ChromaDB | LCEL 链式调用 + 本地向量数据库 |
+| 关键词检索 | rank-bm25 | BM25 算法，与向量检索互补 |
+| 精排模型 | BAAI/bge-reranker-base | Cross-Encoder 重排序 |
+| Agent | 手写 ReAct 循环 + LangChain Tool | 无额外框架依赖 |
+| 前端 | Streamlit | 数据应用快速原型 |
+
+---
+
+## 快速开始
+
+### 1. 安装依赖
+
 ```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-#### 3. 配置代理 (可选)
-项目会自动读取系统环境变量。如果在代码中未检测到代理，默认会尝试使用 `http://127.0.0.1:7897`。你可以直接修改 `config/settings.py` 中的默认端口，或者在终端设置环境变量：
+### 2. 配置环境变量
+
 ```bash
-# Windows PowerShell
-$env:HTTP_PROXY="http://127.0.0.1:7890"
-$env:HTTPS_PROXY="http://127.0.0.1:7890"
+export DASHSCOPE_API_KEY="your-api-key-here"
 ```
 
-#### 4. 启动应用
+DashScope API Key 从 [阿里云百炼平台](https://bailian.console.aliyun.com/) 获取，LLM + Embedding + 评估全部使用同一个 Key。
+
+### 3. 启动应用
+
 ```bash
 streamlit run ui/main.py
 ```
 
+浏览器访问 http://localhost:8501 即可使用。
+
+### 4. 代码调用（无需 UI）
+
+```python
+from core.agent.react_agent import TestCaseReActAgent
+
+agent = TestCaseReActAgent(max_steps=8, target_score=70)
+
+# 基础调用
+result = agent.run("请根据以下PRD生成测试用例：用户登录功能...")
+print(result.final_answer)
+
+# 带质量迭代
+result = agent.run_with_quality_loop(prd_text="用户登录功能需求...")
+print(f"质量分数: {result.quality_score}")
+```
+
+---
+
+## 测试
+
+```bash
+# 运行全部测试（需要 DASHSCOPE_API_KEY 环境变量）
+python tests/test_rag_engine.py
+python tests/test_lc_chain.py
+python tests/test_tools.py
+python tests/test_react_agent.py
+```
+
+| 测试文件 | 覆盖范围 | 结果 |
+|---------|---------|------|
+| test_rag_engine.py | RAG 混合检索、Reranker、ChromaDB | 16 通过 / 1 跳过 |
+| test_lc_chain.py | LCEL 链、ChatTongyi、多轮对话 | 24 通过 |
+| test_tools.py | 5 个 LangChain Tool 调用 | 20 通过 |
+| test_react_agent.py | ReAct 循环、正则解析、质量迭代 | 17 通过 |
+
+---
+
+## 变更日志
+
+| 阶段 | 文档 | 核心内容 |
+|------|------|---------|
+| Phase 1 | [001_RAG层升级_混合检索+重排序.md](变更/001_RAG层升级_混合检索+重排序.md) | 向量+BM25 混合检索、RRF 融合、BGE-Reranker |
+| Phase 2 | [002_LLM层升级_通义千问LCEL+DashScope替代Gemini.md](变更/002_LLM层升级_通义千问LCEL+DashScope替代Gemini.md) | ChatTongyi LCEL 链、DashScope Embedding |
+| Phase 3 | [003_工具库_LangChain_Tools封装.md](变更/003_工具库_LangChain_Tools封装.md) | 5 个 @tool 封装、Evaluator 升级 |
+| Phase 4 | [004_ReAct_Agent_手写推理循环.md](变更/004_ReAct_Agent_手写推理循环.md) | 手写 ReAct 循环、三层解析、质量迭代闭环 |
+
+---
+
+## 致谢
+
+本项目原始版本来源于字节跳动训练营结题项目，在此基础上进行了完整的架构升级。
